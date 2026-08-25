@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Book</title>
+<style>
+  :root{
+    --paper:#EDE8DC;
+    --card:#FBF9F3;
+    --ink:#2B2620;
+    --ink-soft:#5C554A;
+    --line:#D8D0BF;
+    --moss:#4F6B49;
+    --moss-soft:#DDE6D6;
+    --rust:#A8492E;
+    --rust-soft:#F1DCD3;
+    --shadow: 0 1px 2px rgba(43,38,32,0.08), 0 4px 14px rgba(43,38,32,0.06);
+    --radius:3px;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  [data-theme="dark"]{
+    --paper:#1B1A16;
+    --card:#252420;
+    --ink:#E9E3D6;
+    --ink-soft:#AFA795;
+    --line:#3A382F;
+    --moss:#8FAF83;
+    --moss-soft:#2C3527;
+    --rust:#D3785A;
+    --rust-soft:#3A2A22;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    min-height:100vh;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header h1{
+    font-family:var(--serif);
+    font-size:30px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  header .tag{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color:var(--ink-soft);
+  }
+  .hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .folder-badge{
+    font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+    display:flex;align-items:center;gap:6px;
+    border:1px solid var(--line);border-radius:20px;padding:6px 10px;
+  }
+
+  button, .btn{
+    font-family:var(--sans);
+    font-size:13px;
+    border:1px solid var(--ink);
+    background:var(--card);
+    color:var(--ink);
+    padding:8px 14px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    line-height:1;
+  }
+  button:hover{background:var(--moss-soft);}
+  button.primary{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
+  button.primary:hover{filter:brightness(1.08);}
+  button.ghost{border-color:var(--line);}
+  button.danger{border-color:var(--rust);color:var(--rust);background:transparent;}
+  button.danger:hover{background:var(--rust-soft);}
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:2px solid var(--moss); outline-offset:2px;
+  }
+  button.icon{padding:8px 10px;font-size:15px;}
+  button:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .search-box{flex:1;min-width:200px;position:relative;}
+  .search-box input{
+    width:100%;padding:10px 12px 10px 34px;border:1px solid var(--line);
+    border-radius:var(--radius);background:var(--card);color:var(--ink);font-size:14px;
+  }
+  .search-box::before{
+    content:"⌕";position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    color:var(--ink-soft);font-size:16px;
+  }
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;}
+  .chip{
+    font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;
+    padding:5px 10px;border:1px solid var(--line);border-radius:20px;cursor:pointer;
+    color:var(--ink-soft);background:var(--card);
+  }
+  .chip.active{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
+
+  #list{display:flex;flex-direction:column;gap:10px;}
+  .entry{
+    background:var(--card);border:1px solid var(--line);border-left:4px solid var(--moss);
+    border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;cursor:pointer;position:relative;
+  }
+  .entry:hover{border-left-color:var(--rust);}
+  .entry-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
+  .entry h3{font-family:var(--serif);font-size:18px;margin:0 0 4px;}
+  .entry .cat{
+    font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;
+    color:var(--moss);white-space:nowrap;
+  }
+  .entry .snippet{
+    color:var(--ink-soft);font-size:13.5px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  }
+  .entry .meta-row{
+    display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);
+  }
+  .kwline{font-family:var(--mono);font-size:10.5px;}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);font-family:var(--serif);font-size:16px;}
+
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(20,18,14,0.5);
+    align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    max-width:640px;width:100%;padding:24px;box-shadow:var(--shadow);
+  }
+  .modal h2{font-family:var(--serif);margin:0 0 16px;font-size:22px;}
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;
+    letter-spacing:0.8px;color:var(--ink-soft);margin-bottom:5px;
+  }
+  .field input[type=text], .field textarea, .field select{
+    width:100%;border:1px solid var(--line);border-radius:var(--radius);padding:9px 10px;
+    font-family:var(--sans);font-size:14px;background:var(--paper);color:var(--ink);resize:vertical;
+  }
+  .field textarea{min-height:140px;line-height:1.5;}
+
+  .dropzone{
+    border:1.5px dashed var(--line);border-radius:var(--radius);padding:16px;text-align:center;
+    color:var(--ink-soft);font-size:12.5px;cursor:pointer;margin-bottom:8px;
+  }
+  .dropzone.drag{border-color:var(--moss);background:var(--moss-soft);}
+  .image-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .image-grid .imgwrap{position:relative;width:78px;height:78px;}
+  .image-grid img{width:100%;height:100%;object-fit:cover;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
+  .image-grid .rm{
+    position:absolute;top:-6px;right:-6px;background:var(--rust);color:#fff;border:none;
+    width:18px;height:18px;border-radius:50%;font-size:11px;line-height:1;cursor:pointer;padding:0;
+  }
+  .modal-actions{display:flex;justify-content:space-between;margin-top:18px;gap:8px;flex-wrap:wrap;}
+  .modal-actions .right{display:flex;gap:8px;}
+
+  .detail-cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--moss);}
+  .detail-body{white-space:pre-wrap;line-height:1.6;font-size:14.5px;margin-top:10px;}
+  .detail-images{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .detail-images img{max-width:150px;max-height:150px;object-fit:cover;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
+  .detail-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:14px;border-top:1px dashed var(--line);padding-top:10px;}
+
+  .lightbox{
+    display:none;position:fixed;inset:0;background:rgba(10,9,7,0.88);
+    align-items:center;justify-content:center;z-index:100;cursor:zoom-out;padding:20px;
+  }
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:92vw;max-height:92vh;border-radius:2px;}
+
+  .connect-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:40px 30px;text-align:center;margin-top:40px;
+  }
+  .connect-card h2{font-family:var(--serif);font-size:22px;margin:0 0 10px;}
+  .connect-card p{color:var(--ink-soft);font-size:14px;max-width:420px;margin:0 auto 20px;line-height:1.5;}
+
+  footer{margin-top:40px;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);letter-spacing:0.3px;}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+  @media (max-width:480px){ .entry-top{flex-direction:column;} header h1{font-size:24px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Field Book</h1>
+      <div class="tag">how to fix it, where to find it — kept for next time</div>
+    </div>
+    <div class="hdr-actions" id="hdrActions">
+      <button class="icon ghost" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">◐</button>
+    </div>
+  </header>
+
+  <div id="mainArea"></div>
+
+  <footer id="footerNote"></footer>
+</div>
+
+<!-- Editor Modal -->
+<div class="overlay" id="editorOverlay">
+  <div class="modal">
+    <h2 id="editorTitle">New Entry</h2>
+    <input type="hidden" id="editId">
+    <div class="field">
+      <label for="fTitle">Title</label>
+      <input type="text" id="fTitle" placeholder="e.g. Reset the office printer's IP address">
+    </div>
+    <div class="field">
+      <label for="fCategory">Line of business</label>
+      <select id="fCategory">
+        <option value="General Liability">General Liability</option>
+        <option value="Professional">Professional</option>
+        <option value="Workers Compensation">Workers Compensation</option>
+        <option value="Auto">Auto</option>
+        <option value="Property">Property</option>
+        <option value="Accident">Accident</option>
+        <option value="Umbrella">Umbrella</option>
+        <option value="Package">Package</option>
+        <option value="General / Other">General / Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fBody">Instructions / notes</label>
+      <textarea id="fBody" placeholder="Steps to fix it, where to find it, what to check first..."></textarea>
+    </div>
+    <div class="field">
+      <label for="fKeywords">Keywords <span style="text-transform:none;letter-spacing:0;">(comma separated — city, insured name, anything else worth searching)</span></label>
+      <input type="text" id="fKeywords" placeholder="e.g. Chicago, supplemental, hazard code">
+    </div>
+    <div class="field">
+      <label>Screenshots / images</label>
+      <div class="dropzone" id="dropzone">Click to add, drag a file here, or paste (Ctrl/Cmd+V) a screenshot</div>
+      <input type="file" id="fileInput" accept="image/*" multiple class="visually-hidden">
+      <div class="image-grid" id="imageGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="danger" id="deleteBtn" style="display:none;">Delete entry</button>
+      <div class="right">
+        <button class="ghost" id="cancelBtn">Cancel</button>
+        <button class="primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="detail-cat" id="dCategory"></div>
+    <h2 id="dTitle"></h2>
+    <div class="detail-body" id="dBody"></div>
+    <div class="detail-cat" id="dKeywords" style="margin-top:8px;color:var(--ink-soft);"></div>
+    <div class="detail-images" id="dImages"></div>
+    <div class="detail-meta" id="dMeta"></div>
+    <div class="modal-actions">
+      <button class="ghost" id="closeDetailBtn">Close</button>
+      <div class="right">
+        <button class="danger" id="dDeleteBtn">Delete</button>
+        <button class="primary" id="dEditBtn">Edit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg" src="" alt="Full size screenshot"></div>
+
+<script>
+(function(){
+  var THEME_KEY = 'refbank_theme';
+  var entries = [];         // in-memory index (mirrors index.json)
+  var dirHandle = null;     // root FileSystemDirectoryHandle
+  var activeCategory = null;
+  var editingImages = [];   // {previewUrl, blob, filename(existing or null)}
+  var editingOldFiles = []; // filenames on disk to clean up on save (editing existing entry)
+  var currentDetailId = null;
+  var currentDetailObjectUrls = [];
+
+  /* ---------- IndexedDB handle storage ---------- */
+  function idbOpen(){
+    return new Promise(function(res,rej){
+      var req = indexedDB.open('refbank-db', 1);
+      req.onupgradeneeded = function(){ req.result.createObjectStore('handles'); };
+      req.onsuccess = function(){ res(req.result); };
+      req.onerror = function(){ rej(req.error); };
+    });
+  }
+  function idbSet(key, val){
+    return idbOpen().then(function(db){
+      return new Promise(function(res,rej){
+        var tx = db.transaction('handles','readwrite');
+        tx.objectStore('handles').put(val, key);
+        tx.oncomplete = function(){ res(); };
+        tx.onerror = function(){ rej(tx.error); };
+      });
+    });
+  }
+  function idbGet(key){
+    return idbOpen().then(function(db){
+      return new Promise(function(res,rej){
+        var tx = db.transaction('handles','readonly');
+        var req = tx.objectStore('handles').get(key);
+        req.onsuccess = function(){ res(req.result); };
+        req.onerror = function(){ rej(req.error); };
+      });
+    });
+  }
+
+  function uid(){ return 'e' + Date.now() + Math.random().toString(16).slice(2,8); }
+  function fmtDate(ts){
+    var d = new Date(ts);
+    return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function slugify(s){
+    return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50) || 'entry';
+  }
+  function extFor(blob, fallback){
+    var t = (blob && blob.type) || '';
+    if(t.indexOf('png')!==-1) return 'png';
+    if(t.indexOf('jpeg')!==-1 || t.indexOf('jpg')!==-1) return 'jpg';
+    if(t.indexOf('gif')!==-1) return 'gif';
+    if(t.indexOf('webp')!==-1) return 'webp';
+    return fallback || 'png';
+  }
+
+  /* ---------- Folder connection ---------- */
+  async function ensurePermission(handle, requestIfNeeded){
+    var opts = {mode:'readwrite'};
+    var perm = await handle.queryPermission(opts);
+    if(perm === 'granted') return true;
+    if(requestIfNeeded){
+      perm = await handle.requestPermission(opts);
+      return perm === 'granted';
+    }
+    return false;
+  }
+
+  async function pickFolder(){
+    try{
+      var handle = await window.showDirectoryPicker({mode:'readwrite'});
+      await idbSet('root', handle);
+      dirHandle = handle;
+      await afterConnect();
+    }catch(e){ /* user cancelled - do nothing */ }
+  }
+
+  async function readIndex(){
+    var fh = await dirHandle.getFileHandle('index.json', {create:true});
+    var file = await fh.getFile();
+    var text = await file.text();
+    if(!text || !text.trim()){ entries = []; return; }
+    try{ entries = JSON.parse(text); }catch(e){ entries = []; }
+  }
+  async function writeIndex(){
+    var fh = await dirHandle.getFileHandle('index.json', {create:true});
+    var w = await fh.createWritable();
+    await w.write(JSON.stringify(entries, null, 2));
+    await w.close();
+  }
+
+  async function afterConnect(){
+    await readIndex();
+    renderHeaderConnected();
+    renderMainConnected();
+  }
+
+  function renderHeaderConnected(){
+    var actions = document.getElementById('hdrActions');
+    actions.innerHTML =
+      '<span class="folder-badge">📁 ' + escapeHtml(dirHandle.name) + '</span>' +
+      '<button class="ghost" id="changeFolderBtn">Change folder</button>' +
+      '<button class="primary" id="newBtn">+ New Entry</button>';
+    document.getElementById('changeFolderBtn').onclick = pickFolder;
+    document.getElementById('newBtn').onclick = function(){ openEditor(null); };
+    // re-add theme button since header innerHTML above only replaced hdrActions, theme btn stays outside
+  }
+
+  function renderMainConnected(){
+    document.getElementById('footerNote').textContent =
+      'Each entry lives in its own folder inside "' + dirHandle.name + '" — notes.txt plus any screenshots, right on your computer.';
+    document.getElementById('mainArea').innerHTML =
+      '<div class="toolbar"><div class="search-box"><input type="text" id="searchInput" placeholder="Search titles, notes, categories, keywords…"></div></div>' +
+      '<div class="chips" id="chipRow"></div>' +
+      '<div id="list"></div>';
+    document.getElementById('searchInput').oninput = renderList;
+    renderChips();
+    renderList();
+  }
+
+  function showConnectPrompt(){
+    document.getElementById('footerNote').textContent = '';
+    document.getElementById('mainArea').innerHTML =
+      '<div class="connect-card">' +
+        '<h2>Choose a folder</h2>' +
+        '<p>Pick (or create) a folder on your computer. Every entry you add will get its own subfolder there, with your notes and screenshots as real files.</p>' +
+        '<button class="primary" id="connectBtn">Choose folder</button>' +
+      '</div>';
+    document.getElementById('connectBtn').onclick = pickFolder;
+  }
+
+  function showReconnectPrompt(handle){
+    document.getElementById('footerNote').textContent = '';
+    document.getElementById('mainArea').innerHTML =
+      '<div class="connect-card">' +
+        '<h2>Reconnect your folder</h2>' +
+        '<p>Your browser needs you to confirm access to "' + escapeHtml(handle.name) + '" again this session.</p>' +
+        '<button class="primary" id="reconnectBtn">Reconnect</button>' +
+        '<div style="margin-top:10px;"><button class="ghost" id="pickDifferentBtn">Choose a different folder</button></div>' +
+      '</div>';
+    document.getElementById('reconnectBtn').onclick = async function(){
+      var ok = await ensurePermission(handle, true);
+      if(ok){ dirHandle = handle; await afterConnect(); }
+    };
+    document.getElementById('pickDifferentBtn').onclick = pickFolder;
+  }
+
+  function showUnsupported(){
+    document.getElementById('footerNote').textContent = '';
+    document.getElementById('mainArea').innerHTML =
+      '<div class="connect-card">' +
+        '<h2>This browser can\'t save live folders</h2>' +
+        '<p>Live folders need Chrome or Edge. Open this file there to connect a folder and start adding entries.</p>' +
+      '</div>';
+  }
+
+  /* ---------- Categories / list ---------- */
+  function allCategories(){
+    var set = {};
+    entries.forEach(function(e){ if(e.category) set[e.category]=true; });
+    return Object.keys(set).sort(function(a,b){return a.localeCompare(b);});
+  }
+  function renderChips(){
+    var row = document.getElementById('chipRow');
+    if(!row) return;
+    var cats = allCategories();
+    row.innerHTML = '';
+    if(cats.length===0) return;
+    var allChip = document.createElement('div');
+    allChip.className = 'chip' + (activeCategory===null ? ' active':'');
+    allChip.textContent = 'All';
+    allChip.onclick = function(){ activeCategory=null; renderChips(); renderList(); };
+    row.appendChild(allChip);
+    cats.forEach(function(c){
+      var chip = document.createElement('div');
+      chip.className = 'chip' + (activeCategory===c ? ' active':'');
+      chip.textContent = c;
+      chip.onclick = function(){ activeCategory = (activeCategory===c ? null : c); renderChips(); renderList(); };
+      row.appendChild(chip);
+    });
+  }
+  function renderList(){
+    var searchEl = document.getElementById('searchInput');
+    var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    var list = document.getElementById('list');
+    if(!list) return;
+    var filtered = entries.filter(function(e){
+      if(activeCategory && e.category !== activeCategory) return false;
+      if(!q) return true;
+      var hay = (e.title+' '+(e.snippet||'')+' '+e.category+' '+(e.keywords||[]).join(' ')).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    }).sort(function(a,b){ return b.updatedAt - a.updatedAt; });
+
+    if(filtered.length===0){
+      list.innerHTML = '<div class="empty">' + (entries.length===0
+        ? 'Nothing filed yet. Add the first fix, where-to-find-it, or how-to you don\'t want to relearn from scratch.'
+        : 'No entries match that search.') + '</div>';
+      return;
+    }
+    list.innerHTML='';
+    filtered.forEach(function(e){
+      var card = document.createElement('div');
+      card.className = 'entry';
+      card.onclick = function(){ openDetail(e.id); };
+      var imgCount = (e.imageFiles||[]).length;
+      card.innerHTML =
+        '<div class="entry-top"><h3>'+escapeHtml(e.title||'Untitled')+'</h3>'+
+        (e.category ? '<span class="cat">'+escapeHtml(e.category)+'</span>' : '')+
+        '</div>'+
+        '<p class="snippet">'+escapeHtml(e.snippet||'')+'</p>'+
+        ((e.keywords&&e.keywords.length) ? '<div class="kwline" style="color:var(--ink-soft);margin-top:4px;">'+escapeHtml(e.keywords.join(' · '))+'</div>' : '')+
+        '<div class="meta-row"><span>Updated '+fmtDate(e.updatedAt)+'</span>'+
+        (imgCount ? '<span>🖼 '+imgCount+'</span>' : '')+
+        '</div>';
+      list.appendChild(card);
+    });
+  }
+
+  /* ---------- Editor ---------- */
+  async function openEditor(entry){
+    editingImages.forEach(function(im){ if(im.previewUrl) URL.revokeObjectURL(im.previewUrl); });
+    editingImages = [];
+    editingOldFiles = [];
+    document.getElementById('editId').value = entry ? entry.id : '';
+    document.getElementById('editorTitle').textContent = entry ? 'Edit Entry' : 'New Entry';
+    document.getElementById('fTitle').value = entry ? entry.title : '';
+    document.getElementById('fCategory').value = entry ? entry.category : 'General Liability';
+    document.getElementById('fKeywords').value = entry ? (entry.keywords||[]).join(', ') : '';
+    document.getElementById('fBody').value = '';
+    document.getElementById('deleteBtn').style.display = entry ? 'inline-block' : 'none';
+    document.getElementById('editorOverlay').classList.add('show');
+    renderImageGrid();
+
+    if(entry){
+      var folderHandle = await dirHandle.getDirectoryHandle(entry.folder, {create:false}).catch(function(){return null;});
+      if(folderHandle){
+        var notesText = '';
+        try{
+          var nfh = await folderHandle.getFileHandle('notes.txt', {create:false});
+          var nfile = await nfh.getFile();
+          notesText = await nfile.text();
+        }catch(e){}
+        document.getElementById('fBody').value = parseBody(notesText);
+
+        editingOldFiles = (entry.imageFiles||[]).slice();
+        for(var i=0;i<editingOldFiles.length;i++){
+          try{
+            var ifh = await folderHandle.getFileHandle(editingOldFiles[i], {create:false});
+            var ifile = await ifh.getFile();
+            editingImages.push({previewUrl:URL.createObjectURL(ifile), blob:ifile, filename:editingOldFiles[i]});
+          }catch(e){}
+        }
+        renderImageGrid();
+      }
+    }
+    document.getElementById('fTitle').focus();
+  }
+  function parseBody(notesText){
+    var idx = notesText.indexOf('\n---\n');
+    if(idx === -1) return notesText;
+    return notesText.slice(idx + 5);
+  }
+  function closeEditor(){
+    document.getElementById('editorOverlay').classList.remove('show');
+  }
+  function renderImageGrid(){
+    var grid = document.getElementById('imageGrid');
+    grid.innerHTML = '';
+    editingImages.forEach(function(im, i){
+      var w = document.createElement('div');
+      w.className='imgwrap';
+      w.innerHTML = '<img src="'+im.previewUrl+'"><button class="rm" title="Remove">×</button>';
+      w.querySelector('img').onclick = function(){ showLightbox(im.previewUrl); };
+      w.querySelector('.rm').onclick = function(ev){
+        ev.stopPropagation();
+        URL.revokeObjectURL(im.previewUrl);
+        editingImages.splice(i,1);
+        renderImageGrid();
+      };
+      grid.appendChild(w);
+    });
+  }
+  function addFiles(fileList){
+    Array.prototype.forEach.call(fileList, function(file){
+      if(!file.type || file.type.indexOf('image/')!==0) return;
+      editingImages.push({previewUrl:URL.createObjectURL(file), blob:file, filename:null});
+    });
+    renderImageGrid();
+  }
+
+  async function saveCurrentEntry(){
+    var id = document.getElementById('editId').value;
+    var title = document.getElementById('fTitle').value.trim();
+    if(!title){ document.getElementById('fTitle').focus(); return; }
+    var category = document.getElementById('fCategory').value;
+    var body = document.getElementById('fBody').value;
+    var keywords = document.getElementById('fKeywords').value.split(',')
+      .map(function(k){return k.trim();}).filter(function(k){return k.length;});
+    var now = Date.now();
+
+    var saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+
+    try{
+      var isNew = !id;
+      var entryId = id || uid();
+      var folderName = isNew ? (slugify(title) + '-' + entryId.slice(-6)) : entries.find(function(x){return x.id===id;}).folder;
+      var folderHandle = await dirHandle.getDirectoryHandle(folderName, {create:true});
+
+      // clean up old image files before writing fresh ones
+      for(var i=0;i<editingOldFiles.length;i++){
+        try{ await folderHandle.removeEntry(editingOldFiles[i]); }catch(e){}
+      }
+      var newImageFiles = [];
+      for(var j=0;j<editingImages.length;j++){
+        var im = editingImages[j];
+        var fname = 'screenshot-' + (j+1) + '.' + extFor(im.blob, 'png');
+        var fh = await folderHandle.getFileHandle(fname, {create:true});
+        var w = await fh.createWritable();
+        await w.write(im.blob);
+        await w.close();
+        newImageFiles.push(fname);
+      }
+
+      var createdAt = isNew ? now : entries.find(function(x){return x.id===id;}).createdAt;
+      var notesContent = 'Title: ' + title + '\nCategory: ' + category + '\nKeywords: ' + keywords.join(', ') +
+        '\nCreated: ' + new Date(createdAt).toISOString() + '\nUpdated: ' + new Date(now).toISOString() +
+        '\n---\n' + body;
+      var notesFh = await folderHandle.getFileHandle('notes.txt', {create:true});
+      var notesW = await notesFh.createWritable();
+      await notesW.write(notesContent);
+      await notesW.close();
+
+      var snippet = body.slice(0,220);
+      var meta = {
+        id: entryId, title: title, category: category, keywords: keywords,
+        folder: folderName, imageFiles: newImageFiles, snippet: snippet,
+        createdAt: createdAt, updatedAt: now
+      };
+      if(isNew){ entries.push(meta); }
+      else { var idxPos = entries.findIndex(function(x){return x.id===id;}); entries[idxPos] = meta; }
+
+      await writeIndex();
+      closeEditor();
+      renderChips();
+      renderList();
+    }catch(e){
+      alert('Could not save to the folder. Make sure it still exists and try again.');
+    }finally{
+      saveBtn.disabled = false; saveBtn.textContent = 'Save';
+    }
+  }
+
+  async function deleteEntryById(id){
+    var e = entries.find(function(x){return x.id===id;});
+    if(!e) return;
+    try{ await dirHandle.removeEntry(e.folder, {recursive:true}); }catch(err){}
+    entries = entries.filter(function(x){return x.id!==id;});
+    await writeIndex();
+    renderChips();
+    renderList();
+  }
+
+  /* ---------- Detail ---------- */
+  async function openDetail(id){
+    var e = entries.find(function(x){return x.id===id;});
+    if(!e) return;
+    currentDetailId = id;
+    currentDetailObjectUrls.forEach(function(u){ URL.revokeObjectURL(u); });
+    currentDetailObjectUrls = [];
+
+    document.getElementById('dTitle').textContent = e.title;
+    document.getElementById('dCategory').textContent = e.category || '';
+    document.getElementById('dKeywords').textContent = (e.keywords&&e.keywords.length) ? e.keywords.join(' · ') : '';
+    document.getElementById('dBody').textContent = 'Loading…';
+    document.getElementById('dImages').innerHTML = '';
+    document.getElementById('dMeta').textContent = 'Created ' + fmtDate(e.createdAt) + '  ·  Updated ' + fmtDate(e.updatedAt);
+    document.getElementById('detailOverlay').classList.add('show');
+
+    try{
+      var folderHandle = await dirHandle.getDirectoryHandle(e.folder, {create:false});
+      var nfh = await folderHandle.getFileHandle('notes.txt', {create:false});
+      var nfile = await nfh.getFile();
+      var text = await nfile.text();
+      document.getElementById('dBody').textContent = parseBody(text);
+
+      var imgHtml = '';
+      for(var i=0;i<(e.imageFiles||[]).length;i++){
+        var ifh = await folderHandle.getFileHandle(e.imageFiles[i], {create:false});
+        var ifile = await ifh.getFile();
+        var url = URL.createObjectURL(ifile);
+        currentDetailObjectUrls.push(url);
+        imgHtml += '<img src="'+url+'" data-url="'+url+'">';
+      }
+      document.getElementById('dImages').innerHTML = imgHtml;
+      Array.prototype.forEach.call(document.getElementById('dImages').querySelectorAll('img'), function(img){
+        img.onclick = function(){ showLightbox(this.src); };
+      });
+    }catch(err){
+      document.getElementById('dBody').textContent = 'Could not read this entry\'s folder. It may have been moved or renamed outside the app.';
+    }
+  }
+  function closeDetail(){
+    document.getElementById('detailOverlay').classList.remove('show');
+    currentDetailId = null;
+  }
+
+  function showLightbox(src){
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('show');
+  }
+  function hideLightbox(){
+    document.getElementById('lightbox').classList.remove('show');
+    document.getElementById('lightboxImg').src='';
+  }
+
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem(THEME_KEY, t);
+  }
+
+  /* ---------- Static wiring ---------- */
+  document.getElementById('cancelBtn').onclick = closeEditor;
+  document.getElementById('saveBtn').onclick = saveCurrentEntry;
+  document.getElementById('deleteBtn').onclick = function(){
+    var id = document.getElementById('editId').value;
+    if(id && confirm('Delete this entry and its folder? This can\'t be undone.')){
+      deleteEntryById(id);
+      closeEditor();
+    }
+  };
+  document.getElementById('closeDetailBtn').onclick = closeDetail;
+  document.getElementById('dEditBtn').onclick = function(){
+    var e = entries.find(function(x){return x.id===currentDetailId;});
+    closeDetail();
+    openEditor(e);
+  };
+  document.getElementById('dDeleteBtn').onclick = function(){
+    if(currentDetailId && confirm('Delete this entry and its folder? This can\'t be undone.')){
+      deleteEntryById(currentDetailId);
+      closeDetail();
+    }
+  };
+  document.getElementById('themeBtn').onclick = function(){
+    var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(cur);
+  };
+
+  var dropzone = document.getElementById('dropzone');
+  dropzone.onclick = function(){ document.getElementById('fileInput').click(); };
+  document.getElementById('fileInput').onchange = function(e){ addFiles(e.target.files); e.target.value=''; };
+  dropzone.ondragover = function(e){ e.preventDefault(); dropzone.classList.add('drag'); };
+  dropzone.ondragleave = function(){ dropzone.classList.remove('drag'); };
+  dropzone.ondrop = function(e){
+    e.preventDefault(); dropzone.classList.remove('drag');
+    if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  };
+  document.getElementById('editorOverlay').addEventListener('paste', function(e){
+    if(e.clipboardData && e.clipboardData.files && e.clipboardData.files.length){
+      addFiles(e.clipboardData.files);
+    }
+  });
+
+  document.getElementById('lightbox').onclick = hideLightbox;
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ hideLightbox(); closeDetail(); closeEditor(); }
+  });
+  document.getElementById('editorOverlay').addEventListener('mousedown', function(e){ if(e.target===this) closeEditor(); });
+  document.getElementById('detailOverlay').addEventListener('mousedown', function(e){ if(e.target===this) closeDetail(); });
+
+  /* ---------- Init ---------- */
+  async function init(){
+    applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+    if(!('showDirectoryPicker' in window)){ showUnsupported(); return; }
+    var handle = await idbGet('root').catch(function(){return null;});
+    if(handle){
+      var ok = await ensurePermission(handle, false);
+      if(ok){ dirHandle = handle; await afterConnect(); }
+      else { showReconnectPrompt(handle); }
+    } else {
+      showConnectPrompt();
+    }
+  }
+  init();
+})();
+</script>
+</body>
+</html>
