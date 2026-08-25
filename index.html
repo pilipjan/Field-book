@@ -34,56 +34,24 @@
     --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:var(--sans);
-    min-height:100vh;
-  }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;}
   .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
 
   header{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    border-bottom:2px solid var(--ink);
-    padding-bottom:14px;
-    margin-bottom:22px;
-    flex-wrap:wrap;
-    gap:10px;
+    display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);
+    padding-bottom:14px;margin-bottom:22px;flex-wrap:wrap;gap:10px;
   }
-  header h1{
-    font-family:var(--serif);
-    font-size:30px;
-    font-weight:700;
-    margin:0;
-    letter-spacing:0.2px;
-  }
-  header .tag{
-    font-family:var(--mono);
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:1.5px;
-    color:var(--ink-soft);
-  }
+  header h1{font-family:var(--serif);font-size:30px;font-weight:700;margin:0;letter-spacing:0.2px;}
+  header .tag{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink-soft);}
   .hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .folder-badge{
-    font-family:var(--mono);font-size:11px;color:var(--ink-soft);
-    display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:11px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;
     border:1px solid var(--line);border-radius:20px;padding:6px 10px;
   }
 
   button, .btn{
-    font-family:var(--sans);
-    font-size:13px;
-    border:1px solid var(--ink);
-    background:var(--card);
-    color:var(--ink);
-    padding:8px 14px;
-    border-radius:var(--radius);
-    cursor:pointer;
-    line-height:1;
+    font-family:var(--sans);font-size:13px;border:1px solid var(--ink);background:var(--card);color:var(--ink);
+    padding:8px 14px;border-radius:var(--radius);cursor:pointer;line-height:1;
   }
   button:hover{background:var(--moss-soft);}
   button.primary{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
@@ -95,6 +63,7 @@
     outline:2px solid var(--moss); outline-offset:2px;
   }
   button.icon{padding:8px 10px;font-size:15px;}
+  button.small{padding:5px 10px;font-size:12px;}
   button:disabled{opacity:0.5;cursor:not-allowed;}
 
   .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
@@ -103,16 +72,12 @@
     width:100%;padding:10px 12px 10px 34px;border:1px solid var(--line);
     border-radius:var(--radius);background:var(--card);color:var(--ink);font-size:14px;
   }
-  .search-box::before{
-    content:"⌕";position:absolute;left:11px;top:50%;transform:translateY(-50%);
-    color:var(--ink-soft);font-size:16px;
-  }
+  .search-box::before{content:"⌕";position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:16px;}
 
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;}
   .chip{
     font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;
-    padding:5px 10px;border:1px solid var(--line);border-radius:20px;cursor:pointer;
-    color:var(--ink-soft);background:var(--card);
+    padding:5px 10px;border:1px solid var(--line);border-radius:20px;cursor:pointer;color:var(--ink-soft);background:var(--card);
   }
   .chip.active{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
 
@@ -124,18 +89,12 @@
   .entry:hover{border-left-color:var(--rust);}
   .entry-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
   .entry h3{font-family:var(--serif);font-size:18px;margin:0 0 4px;}
-  .entry .cat{
-    font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;
-    color:var(--moss);white-space:nowrap;
-  }
+  .entry .cat{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--moss);white-space:nowrap;}
   .entry .snippet{
     color:var(--ink-soft);font-size:13.5px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   }
-  .entry .meta-row{
-    display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;
-    font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);
-  }
+  .entry .meta-row{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
   .kwline{font-family:var(--mono);font-size:10.5px;}
 
   .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);font-family:var(--serif);font-size:16px;}
@@ -145,41 +104,51 @@
     align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;z-index:50;
   }
   .overlay.show{display:flex;}
-  .modal{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    max-width:640px;width:100%;padding:24px;box-shadow:var(--shadow);
-  }
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);max-width:680px;width:100%;padding:24px;box-shadow:var(--shadow);}
   .modal h2{font-family:var(--serif);margin:0 0 16px;font-size:22px;}
   .field{margin-bottom:14px;}
-  .field label{
-    display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;
-    letter-spacing:0.8px;color:var(--ink-soft);margin-bottom:5px;
-  }
-  .field input[type=text], .field textarea, .field select{
+  .field label{display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-soft);margin-bottom:5px;}
+  .field input[type=text], .field select{
     width:100%;border:1px solid var(--line);border-radius:var(--radius);padding:9px 10px;
-    font-family:var(--sans);font-size:14px;background:var(--paper);color:var(--ink);resize:vertical;
+    font-family:var(--sans);font-size:14px;background:var(--paper);color:var(--ink);
   }
-  .field textarea{min-height:140px;line-height:1.5;}
 
-  .dropzone{
-    border:1.5px dashed var(--line);border-radius:var(--radius);padding:16px;text-align:center;
-    color:var(--ink-soft);font-size:12.5px;cursor:pointer;margin-bottom:8px;
+  .block-toolbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .block-card{border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-bottom:10px;background:var(--paper);}
+  .block-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .block-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-soft);}
+  .block-controls{display:flex;gap:4px;}
+  .block-controls button{padding:3px 7px;font-size:11px;line-height:1;}
+  .block-card input[type=text], .block-card textarea{
+    width:100%;border:1px solid var(--line);border-radius:var(--radius);padding:8px 9px;
+    font-family:var(--sans);font-size:13.5px;background:var(--card);color:var(--ink);resize:vertical;
   }
-  .dropzone.drag{border-color:var(--moss);background:var(--moss-soft);}
-  .image-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
-  .image-grid .imgwrap{position:relative;width:78px;height:78px;}
-  .image-grid img{width:100%;height:100%;object-fit:cover;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
-  .image-grid .rm{
-    position:absolute;top:-6px;right:-6px;background:var(--rust);color:#fff;border:none;
+  .block-card textarea{min-height:64px;line-height:1.5;}
+  .block-card.heading input{font-family:var(--serif);font-size:17px;font-weight:700;}
+  .block-empty-hint{color:var(--ink-soft);font-size:13px;text-align:center;padding:14px;border:1px dashed var(--line);border-radius:var(--radius);}
+
+  .img-block-drop{
+    border:1.5px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center;
+    color:var(--ink-soft);font-size:12px;cursor:pointer;margin-bottom:8px;
+  }
+  .img-block-drop.drag{border-color:var(--moss);background:var(--moss-soft);}
+  .img-block-preview{position:relative;display:inline-block;margin-bottom:8px;}
+  .img-block-preview img{max-width:220px;max-height:160px;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;display:block;}
+  .img-block-preview .rm{
+    position:absolute;top:-7px;right:-7px;background:var(--rust);color:#fff;border:none;
     width:18px;height:18px;border-radius:50%;font-size:11px;line-height:1;cursor:pointer;padding:0;
   }
+
   .modal-actions{display:flex;justify-content:space-between;margin-top:18px;gap:8px;flex-wrap:wrap;}
   .modal-actions .right{display:flex;gap:8px;}
 
   .detail-cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--moss);}
-  .detail-body{white-space:pre-wrap;line-height:1.6;font-size:14.5px;margin-top:10px;}
-  .detail-images{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
-  .detail-images img{max-width:150px;max-height:150px;object-fit:cover;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
+  .detail-body h3{font-family:var(--serif);margin:18px 0 6px;font-size:17px;}
+  .detail-body h3:first-child{margin-top:10px;}
+  .detail-body p{margin:0 0 12px;line-height:1.6;font-size:14.5px;white-space:pre-wrap;}
+  .detail-body figure{margin:0 0 16px;}
+  .detail-body figure img{max-width:100%;max-height:340px;object-fit:contain;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
+  .detail-body figcaption{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;}
   .detail-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:14px;border-top:1px dashed var(--line);padding-top:10px;}
 
   .lightbox{
@@ -212,9 +181,7 @@
       <button class="icon ghost" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">◐</button>
     </div>
   </header>
-
   <div id="mainArea"></div>
-
   <footer id="footerNote"></footer>
 </div>
 
@@ -242,18 +209,17 @@
       </select>
     </div>
     <div class="field">
-      <label for="fBody">Instructions / notes</label>
-      <textarea id="fBody" placeholder="Steps to fix it, where to find it, what to check first..."></textarea>
-    </div>
-    <div class="field">
       <label for="fKeywords">Keywords <span style="text-transform:none;letter-spacing:0;">(comma separated — city, insured name, anything else worth searching)</span></label>
       <input type="text" id="fKeywords" placeholder="e.g. Chicago, supplemental, hazard code">
     </div>
     <div class="field">
-      <label>Screenshots / images</label>
-      <div class="dropzone" id="dropzone">Click to add, drag a file here, or paste (Ctrl/Cmd+V) a screenshot</div>
-      <input type="file" id="fileInput" accept="image/*" multiple class="visually-hidden">
-      <div class="image-grid" id="imageGrid"></div>
+      <label>Instructions</label>
+      <div class="block-toolbar">
+        <button type="button" class="ghost small" id="addHeadingBtn">+ Heading</button>
+        <button type="button" class="ghost small" id="addTextBtn">+ Text</button>
+        <button type="button" class="ghost small" id="addImageBtn">+ Image</button>
+      </div>
+      <div id="blocksContainer"></div>
     </div>
     <div class="modal-actions">
       <button class="danger" id="deleteBtn" style="display:none;">Delete entry</button>
@@ -272,7 +238,6 @@
     <h2 id="dTitle"></h2>
     <div class="detail-body" id="dBody"></div>
     <div class="detail-cat" id="dKeywords" style="margin-top:8px;color:var(--ink-soft);"></div>
-    <div class="detail-images" id="dImages"></div>
     <div class="detail-meta" id="dMeta"></div>
     <div class="modal-actions">
       <button class="ghost" id="closeDetailBtn">Close</button>
@@ -289,11 +254,11 @@
 <script>
 (function(){
   var THEME_KEY = 'refbank_theme';
-  var entries = [];         // in-memory index (mirrors index.json)
-  var dirHandle = null;     // root FileSystemDirectoryHandle
+  var entries = [];
+  var dirHandle = null;
   var activeCategory = null;
-  var editingImages = [];   // {previewUrl, blob, filename(existing or null)}
-  var editingOldFiles = []; // filenames on disk to clean up on save (editing existing entry)
+  var blocks = [];             // {id, type:'heading'|'text'|'image', text, caption, blob, filename, previewUrl}
+  var editingOldFiles = [];    // image filenames on disk before this edit, for cleanup
   var currentDetailId = null;
   var currentDetailObjectUrls = [];
 
@@ -328,12 +293,9 @@
   }
 
   function uid(){ return 'e' + Date.now() + Math.random().toString(16).slice(2,8); }
-  function fmtDate(ts){
-    var d = new Date(ts);
-    return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-  }
+  function fmtDate(ts){ var d = new Date(ts); return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
   function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, function(c){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
@@ -354,22 +316,17 @@
     var opts = {mode:'readwrite'};
     var perm = await handle.queryPermission(opts);
     if(perm === 'granted') return true;
-    if(requestIfNeeded){
-      perm = await handle.requestPermission(opts);
-      return perm === 'granted';
-    }
+    if(requestIfNeeded){ perm = await handle.requestPermission(opts); return perm === 'granted'; }
     return false;
   }
-
   async function pickFolder(){
     try{
       var handle = await window.showDirectoryPicker({mode:'readwrite'});
       await idbSet('root', handle);
       dirHandle = handle;
       await afterConnect();
-    }catch(e){ /* user cancelled - do nothing */ }
+    }catch(e){}
   }
-
   async function readIndex(){
     var fh = await dirHandle.getFileHandle('index.json', {create:true});
     var file = await fh.getFile();
@@ -383,13 +340,11 @@
     await w.write(JSON.stringify(entries, null, 2));
     await w.close();
   }
-
   async function afterConnect(){
     await readIndex();
     renderHeaderConnected();
     renderMainConnected();
   }
-
   function renderHeaderConnected(){
     var actions = document.getElementById('hdrActions');
     actions.innerHTML =
@@ -398,55 +353,43 @@
       '<button class="primary" id="newBtn">+ New Entry</button>';
     document.getElementById('changeFolderBtn').onclick = pickFolder;
     document.getElementById('newBtn').onclick = function(){ openEditor(null); };
-    // re-add theme button since header innerHTML above only replaced hdrActions, theme btn stays outside
   }
-
   function renderMainConnected(){
     document.getElementById('footerNote').textContent =
       'Each entry lives in its own folder inside "' + dirHandle.name + '" — notes.txt plus any screenshots, right on your computer.';
     document.getElementById('mainArea').innerHTML =
       '<div class="toolbar"><div class="search-box"><input type="text" id="searchInput" placeholder="Search titles, notes, categories, keywords…"></div></div>' +
-      '<div class="chips" id="chipRow"></div>' +
-      '<div id="list"></div>';
+      '<div class="chips" id="chipRow"></div><div id="list"></div>';
     document.getElementById('searchInput').oninput = renderList;
     renderChips();
     renderList();
   }
-
   function showConnectPrompt(){
     document.getElementById('footerNote').textContent = '';
     document.getElementById('mainArea').innerHTML =
-      '<div class="connect-card">' +
-        '<h2>Choose a folder</h2>' +
-        '<p>Pick (or create) a folder on your computer. Every entry you add will get its own subfolder there, with your notes and screenshots as real files.</p>' +
-        '<button class="primary" id="connectBtn">Choose folder</button>' +
-      '</div>';
+      '<div class="connect-card"><h2>Choose a folder</h2>' +
+      '<p>Pick (or create) a folder on your computer. Every entry you add will get its own subfolder there, with your notes and screenshots as real files.</p>' +
+      '<button class="primary" id="connectBtn">Choose folder</button></div>';
     document.getElementById('connectBtn').onclick = pickFolder;
   }
-
   function showReconnectPrompt(handle){
     document.getElementById('footerNote').textContent = '';
     document.getElementById('mainArea').innerHTML =
-      '<div class="connect-card">' +
-        '<h2>Reconnect your folder</h2>' +
-        '<p>Your browser needs you to confirm access to "' + escapeHtml(handle.name) + '" again this session.</p>' +
-        '<button class="primary" id="reconnectBtn">Reconnect</button>' +
-        '<div style="margin-top:10px;"><button class="ghost" id="pickDifferentBtn">Choose a different folder</button></div>' +
-      '</div>';
+      '<div class="connect-card"><h2>Reconnect your folder</h2>' +
+      '<p>Your browser needs you to confirm access to "' + escapeHtml(handle.name) + '" again this session.</p>' +
+      '<button class="primary" id="reconnectBtn">Reconnect</button>' +
+      '<div style="margin-top:10px;"><button class="ghost" id="pickDifferentBtn">Choose a different folder</button></div></div>';
     document.getElementById('reconnectBtn').onclick = async function(){
       var ok = await ensurePermission(handle, true);
       if(ok){ dirHandle = handle; await afterConnect(); }
     };
     document.getElementById('pickDifferentBtn').onclick = pickFolder;
   }
-
   function showUnsupported(){
     document.getElementById('footerNote').textContent = '';
     document.getElementById('mainArea').innerHTML =
-      '<div class="connect-card">' +
-        '<h2>This browser can\'t save live folders</h2>' +
-        '<p>Live folders need Chrome or Edge. Open this file there to connect a folder and start adding entries.</p>' +
-      '</div>';
+      '<div class="connect-card"><h2>This browser can\'t save live folders</h2>' +
+      '<p>Live folders need Chrome or Edge. Open this file there to connect a folder and start adding entries.</p></div>';
   }
 
   /* ---------- Categories / list ---------- */
@@ -497,7 +440,7 @@
       var card = document.createElement('div');
       card.className = 'entry';
       card.onclick = function(){ openDetail(e.id); };
-      var imgCount = (e.imageFiles||[]).length;
+      var imgCount = e.imageCount || 0;
       card.innerHTML =
         '<div class="entry-top"><h3>'+escapeHtml(e.title||'Untitled')+'</h3>'+
         (e.category ? '<span class="cat">'+escapeHtml(e.category)+'</span>' : '')+
@@ -511,20 +454,178 @@
     });
   }
 
-  /* ---------- Editor ---------- */
+  /* ---------- Block editor ---------- */
+  function addBlock(type){
+    blocks.push({id:uid(), type:type, text:'', caption:'', blob:null, filename:null, previewUrl:null});
+    renderBlocks();
+  }
+  function moveBlock(id, dir){
+    var i = blocks.findIndex(function(b){return b.id===id;});
+    var j = i + dir;
+    if(i<0 || j<0 || j>=blocks.length) return;
+    var tmp = blocks[i]; blocks[i]=blocks[j]; blocks[j]=tmp;
+    renderBlocks();
+  }
+  function removeBlock(id){
+    var b = blocks.find(function(x){return x.id===id;});
+    if(b && b.previewUrl) URL.revokeObjectURL(b.previewUrl);
+    blocks = blocks.filter(function(x){return x.id!==id;});
+    renderBlocks();
+  }
+  function renderBlocks(){
+    var c = document.getElementById('blocksContainer');
+    c.innerHTML = '';
+    if(blocks.length===0){
+      c.innerHTML = '<div class="block-empty-hint">No content yet — add a heading, a paragraph of text, or an image to start building the tutorial.</div>';
+      return;
+    }
+    blocks.forEach(function(b, i){
+      var card = document.createElement('div');
+      card.className = 'block-card ' + b.type;
+      var labelText = b.type === 'heading' ? 'Heading' : (b.type === 'image' ? 'Image' : 'Text');
+      var head = document.createElement('div');
+      head.className = 'block-head';
+      head.innerHTML = '<span class="block-label">'+labelText+'</span>';
+      var controls = document.createElement('div');
+      controls.className = 'block-controls';
+      var upBtn = document.createElement('button'); upBtn.type='button'; upBtn.textContent='↑'; upBtn.disabled = (i===0);
+      upBtn.onclick = function(){ moveBlock(b.id, -1); };
+      var downBtn = document.createElement('button'); downBtn.type='button'; downBtn.textContent='↓'; downBtn.disabled = (i===blocks.length-1);
+      downBtn.onclick = function(){ moveBlock(b.id, 1); };
+      var delBtn = document.createElement('button'); delBtn.type='button'; delBtn.textContent='Remove';
+      delBtn.onclick = function(){ removeBlock(b.id); };
+      controls.appendChild(upBtn); controls.appendChild(downBtn); controls.appendChild(delBtn);
+      head.appendChild(controls);
+      card.appendChild(head);
+
+      if(b.type === 'heading'){
+        var hInput = document.createElement('input');
+        hInput.type='text'; hInput.placeholder='Step heading, e.g. "Step 1: Open network settings"';
+        hInput.value = b.text;
+        hInput.oninput = function(){ b.text = hInput.value; };
+        card.appendChild(hInput);
+      } else if(b.type === 'text'){
+        var ta = document.createElement('textarea');
+        ta.placeholder = 'Describe this step…';
+        ta.value = b.text;
+        ta.oninput = function(){ b.text = ta.value; };
+        card.appendChild(ta);
+      } else if(b.type === 'image'){
+        if(b.previewUrl){
+          var pw = document.createElement('div');
+          pw.className = 'img-block-preview';
+          pw.innerHTML = '<img src="'+b.previewUrl+'"><button type="button" class="rm">×</button>';
+          pw.querySelector('img').onclick = function(){ showLightbox(b.previewUrl); };
+          pw.querySelector('.rm').onclick = function(){
+            URL.revokeObjectURL(b.previewUrl);
+            b.previewUrl = null; b.blob = null; b.filename = null;
+            renderBlocks();
+          };
+          card.appendChild(pw);
+        } else {
+          var dz = document.createElement('div');
+          dz.className = 'img-block-drop';
+          dz.tabIndex = 0;
+          dz.textContent = 'Click to add, drag a file here, or click then paste (Ctrl/Cmd+V) a screenshot';
+          var fi = document.createElement('input');
+          fi.type='file'; fi.accept='image/*'; fi.className='visually-hidden';
+          fi.onchange = function(){ if(fi.files[0]) setBlockImage(b, fi.files[0]); };
+          dz.onclick = function(){ fi.click(); };
+          dz.ondragover = function(e){ e.preventDefault(); dz.classList.add('drag'); };
+          dz.ondragleave = function(){ dz.classList.remove('drag'); };
+          dz.ondrop = function(e){
+            e.preventDefault(); dz.classList.remove('drag');
+            if(e.dataTransfer.files[0]) setBlockImage(b, e.dataTransfer.files[0]);
+          };
+          dz.onpaste = function(e){
+            if(e.clipboardData && e.clipboardData.files && e.clipboardData.files[0]){
+              setBlockImage(b, e.clipboardData.files[0]);
+            }
+          };
+          card.appendChild(dz);
+          card.appendChild(fi);
+        }
+        var capInput = document.createElement('input');
+        capInput.type='text'; capInput.placeholder='Caption (optional)';
+        capInput.value = b.caption;
+        capInput.style.marginTop = '4px';
+        capInput.oninput = function(){ b.caption = capInput.value; };
+        card.appendChild(capInput);
+      }
+      c.appendChild(card);
+    });
+  }
+  function setBlockImage(b, file){
+    if(!file.type || file.type.indexOf('image/')!==0) return;
+    b.blob = file;
+    b.filename = null;
+    b.previewUrl = URL.createObjectURL(file);
+    renderBlocks();
+  }
+
+  /* ---------- Serialize / parse notes.txt body ---------- */
+  function serializeBlocks(blockList){
+    var lines = [];
+    blockList.forEach(function(b){
+      if(b.type==='heading'){ lines.push('## ' + (b.text||'')); }
+      else if(b.type==='text'){ lines.push(b.text||''); }
+      else if(b.type==='image'){
+        lines.push('[IMAGE: ' + b.filename + ']');
+        if(b.caption){ lines.push('Caption: ' + b.caption); }
+      }
+      lines.push('');
+    });
+    return lines.join('\n').trim() + '\n';
+  }
+  function parseBlocksFromBody(bodyText){
+    var lines = (bodyText||'').split('\n');
+    var out = [];
+    var i = 0;
+    while(i < lines.length){
+      var line = lines[i];
+      if(line.indexOf('## ') === 0){
+        out.push({type:'heading', text: line.slice(3)}); i++; continue;
+      }
+      if(line.indexOf('[IMAGE: ') === 0 && line.trim().slice(-1) === ']'){
+        var fname = line.trim().slice(8, -1);
+        i++;
+        var caption = '';
+        if(lines[i] && lines[i].indexOf('Caption: ') === 0){ caption = lines[i].slice(9); i++; }
+        out.push({type:'image', filename: fname, caption: caption});
+        continue;
+      }
+      if(line.trim() === ''){ i++; continue; }
+      var textLines = [];
+      while(i < lines.length && lines[i].trim() !== '' && lines[i].indexOf('## ') !== 0 && lines[i].indexOf('[IMAGE: ') !== 0){
+        textLines.push(lines[i]); i++;
+      }
+      out.push({type:'text', text: textLines.join('\n')});
+    }
+    return out;
+  }
+  function flattenForSnippet(blockList){
+    return blockList.filter(function(b){ return b.type==='heading' || b.type==='text'; })
+      .map(function(b){ return b.text; }).join(' ').trim().slice(0,220);
+  }
+
+  /* ---------- Editor open/save ---------- */
+  function parseBody(notesText){
+    var idx = notesText.indexOf('\n---\n');
+    if(idx === -1) return notesText;
+    return notesText.slice(idx + 5);
+  }
   async function openEditor(entry){
-    editingImages.forEach(function(im){ if(im.previewUrl) URL.revokeObjectURL(im.previewUrl); });
-    editingImages = [];
+    blocks.forEach(function(b){ if(b.previewUrl) URL.revokeObjectURL(b.previewUrl); });
+    blocks = [];
     editingOldFiles = [];
     document.getElementById('editId').value = entry ? entry.id : '';
     document.getElementById('editorTitle').textContent = entry ? 'Edit Entry' : 'New Entry';
     document.getElementById('fTitle').value = entry ? entry.title : '';
     document.getElementById('fCategory').value = entry ? entry.category : 'General Liability';
     document.getElementById('fKeywords').value = entry ? (entry.keywords||[]).join(', ') : '';
-    document.getElementById('fBody').value = '';
     document.getElementById('deleteBtn').style.display = entry ? 'inline-block' : 'none';
     document.getElementById('editorOverlay').classList.add('show');
-    renderImageGrid();
+    renderBlocks();
 
     if(entry){
       var folderHandle = await dirHandle.getDirectoryHandle(entry.folder, {create:false}).catch(function(){return null;});
@@ -535,60 +636,35 @@
           var nfile = await nfh.getFile();
           notesText = await nfile.text();
         }catch(e){}
-        document.getElementById('fBody').value = parseBody(notesText);
-
-        editingOldFiles = (entry.imageFiles||[]).slice();
-        for(var i=0;i<editingOldFiles.length;i++){
-          try{
-            var ifh = await folderHandle.getFileHandle(editingOldFiles[i], {create:false});
-            var ifile = await ifh.getFile();
-            editingImages.push({previewUrl:URL.createObjectURL(ifile), blob:ifile, filename:editingOldFiles[i]});
-          }catch(e){}
+        var parsed = parseBlocksFromBody(parseBody(notesText));
+        for(var i=0;i<parsed.length;i++){
+          var pb = parsed[i];
+          if(pb.type === 'image'){
+            editingOldFiles.push(pb.filename);
+            var previewUrl = null, blob = null;
+            try{
+              var ifh = await folderHandle.getFileHandle(pb.filename, {create:false});
+              var ifile = await ifh.getFile();
+              blob = ifile;
+              previewUrl = URL.createObjectURL(ifile);
+            }catch(e){}
+            blocks.push({id:uid(), type:'image', text:'', caption: pb.caption||'', blob: blob, filename: pb.filename, previewUrl: previewUrl});
+          } else {
+            blocks.push({id:uid(), type:pb.type, text: pb.text||'', caption:'', blob:null, filename:null, previewUrl:null});
+          }
         }
-        renderImageGrid();
+        renderBlocks();
       }
     }
     document.getElementById('fTitle').focus();
   }
-  function parseBody(notesText){
-    var idx = notesText.indexOf('\n---\n');
-    if(idx === -1) return notesText;
-    return notesText.slice(idx + 5);
-  }
-  function closeEditor(){
-    document.getElementById('editorOverlay').classList.remove('show');
-  }
-  function renderImageGrid(){
-    var grid = document.getElementById('imageGrid');
-    grid.innerHTML = '';
-    editingImages.forEach(function(im, i){
-      var w = document.createElement('div');
-      w.className='imgwrap';
-      w.innerHTML = '<img src="'+im.previewUrl+'"><button class="rm" title="Remove">×</button>';
-      w.querySelector('img').onclick = function(){ showLightbox(im.previewUrl); };
-      w.querySelector('.rm').onclick = function(ev){
-        ev.stopPropagation();
-        URL.revokeObjectURL(im.previewUrl);
-        editingImages.splice(i,1);
-        renderImageGrid();
-      };
-      grid.appendChild(w);
-    });
-  }
-  function addFiles(fileList){
-    Array.prototype.forEach.call(fileList, function(file){
-      if(!file.type || file.type.indexOf('image/')!==0) return;
-      editingImages.push({previewUrl:URL.createObjectURL(file), blob:file, filename:null});
-    });
-    renderImageGrid();
-  }
+  function closeEditor(){ document.getElementById('editorOverlay').classList.remove('show'); }
 
   async function saveCurrentEntry(){
     var id = document.getElementById('editId').value;
     var title = document.getElementById('fTitle').value.trim();
     if(!title){ document.getElementById('fTitle').focus(); return; }
     var category = document.getElementById('fCategory').value;
-    var body = document.getElementById('fBody').value;
     var keywords = document.getElementById('fKeywords').value.split(',')
       .map(function(k){return k.trim();}).filter(function(k){return k.length;});
     var now = Date.now();
@@ -602,34 +678,44 @@
       var folderName = isNew ? (slugify(title) + '-' + entryId.slice(-6)) : entries.find(function(x){return x.id===id;}).folder;
       var folderHandle = await dirHandle.getDirectoryHandle(folderName, {create:true});
 
-      // clean up old image files before writing fresh ones
-      for(var i=0;i<editingOldFiles.length;i++){
-        try{ await folderHandle.removeEntry(editingOldFiles[i]); }catch(e){}
+      for(var k=0;k<editingOldFiles.length;k++){
+        try{ await folderHandle.removeEntry(editingOldFiles[k]); }catch(e){}
       }
-      var newImageFiles = [];
-      for(var j=0;j<editingImages.length;j++){
-        var im = editingImages[j];
-        var fname = 'screenshot-' + (j+1) + '.' + extFor(im.blob, 'png');
-        var fh = await folderHandle.getFileHandle(fname, {create:true});
-        var w = await fh.createWritable();
-        await w.write(im.blob);
-        await w.close();
-        newImageFiles.push(fname);
+
+      var imageBlockIdx = 0;
+      var imageCount = 0;
+      for(var j=0;j<blocks.length;j++){
+        if(blocks[j].type === 'image' && blocks[j].blob){
+          imageBlockIdx++;
+          var fname = 'screenshot-' + imageBlockIdx + '.' + extFor(blocks[j].blob, 'png');
+          var fh = await folderHandle.getFileHandle(fname, {create:true});
+          var w = await fh.createWritable();
+          await w.write(blocks[j].blob);
+          await w.close();
+          blocks[j].filename = fname;
+          imageCount++;
+        }
       }
+
+      var validBlocks = blocks.filter(function(b){
+        if(b.type==='image') return !!b.filename;
+        return true;
+      });
+      var bodyText = serializeBlocks(validBlocks);
 
       var createdAt = isNew ? now : entries.find(function(x){return x.id===id;}).createdAt;
       var notesContent = 'Title: ' + title + '\nCategory: ' + category + '\nKeywords: ' + keywords.join(', ') +
         '\nCreated: ' + new Date(createdAt).toISOString() + '\nUpdated: ' + new Date(now).toISOString() +
-        '\n---\n' + body;
+        '\n---\n' + bodyText;
       var notesFh = await folderHandle.getFileHandle('notes.txt', {create:true});
       var notesW = await notesFh.createWritable();
       await notesW.write(notesContent);
       await notesW.close();
 
-      var snippet = body.slice(0,220);
+      var snippet = flattenForSnippet(validBlocks);
       var meta = {
         id: entryId, title: title, category: category, keywords: keywords,
-        folder: folderName, imageFiles: newImageFiles, snippet: snippet,
+        folder: folderName, snippet: snippet, imageCount: imageCount,
         createdAt: createdAt, updatedAt: now
       };
       if(isNew){ entries.push(meta); }
@@ -667,8 +753,7 @@
     document.getElementById('dTitle').textContent = e.title;
     document.getElementById('dCategory').textContent = e.category || '';
     document.getElementById('dKeywords').textContent = (e.keywords&&e.keywords.length) ? e.keywords.join(' · ') : '';
-    document.getElementById('dBody').textContent = 'Loading…';
-    document.getElementById('dImages').innerHTML = '';
+    document.getElementById('dBody').innerHTML = '<p>Loading…</p>';
     document.getElementById('dMeta').textContent = 'Created ' + fmtDate(e.createdAt) + '  ·  Updated ' + fmtDate(e.updatedAt);
     document.getElementById('detailOverlay').classList.add('show');
 
@@ -677,28 +762,36 @@
       var nfh = await folderHandle.getFileHandle('notes.txt', {create:false});
       var nfile = await nfh.getFile();
       var text = await nfile.text();
-      document.getElementById('dBody').textContent = parseBody(text);
+      var parsed = parseBlocksFromBody(parseBody(text));
 
-      var imgHtml = '';
-      for(var i=0;i<(e.imageFiles||[]).length;i++){
-        var ifh = await folderHandle.getFileHandle(e.imageFiles[i], {create:false});
-        var ifile = await ifh.getFile();
-        var url = URL.createObjectURL(ifile);
-        currentDetailObjectUrls.push(url);
-        imgHtml += '<img src="'+url+'" data-url="'+url+'">';
+      var html = '';
+      for(var i=0;i<parsed.length;i++){
+        var b = parsed[i];
+        if(b.type==='heading'){
+          html += '<h3>'+escapeHtml(b.text)+'</h3>';
+        } else if(b.type==='text'){
+          html += '<p>'+escapeHtml(b.text)+'</p>';
+        } else if(b.type==='image'){
+          try{
+            var ifh = await folderHandle.getFileHandle(b.filename, {create:false});
+            var ifile = await ifh.getFile();
+            var url = URL.createObjectURL(ifile);
+            currentDetailObjectUrls.push(url);
+            html += '<figure><img src="'+url+'" data-src="'+url+'">' +
+              (b.caption ? '<figcaption>'+escapeHtml(b.caption)+'</figcaption>' : '') + '</figure>';
+          }catch(e){}
+        }
       }
-      document.getElementById('dImages').innerHTML = imgHtml;
-      Array.prototype.forEach.call(document.getElementById('dImages').querySelectorAll('img'), function(img){
+      if(!html) html = '<p style="color:var(--ink-soft);">No content in this entry yet.</p>';
+      document.getElementById('dBody').innerHTML = html;
+      Array.prototype.forEach.call(document.getElementById('dBody').querySelectorAll('img'), function(img){
         img.onclick = function(){ showLightbox(this.src); };
       });
     }catch(err){
-      document.getElementById('dBody').textContent = 'Could not read this entry\'s folder. It may have been moved or renamed outside the app.';
+      document.getElementById('dBody').innerHTML = '<p>Could not read this entry\'s folder. It may have been moved or renamed outside the app.</p>';
     }
   }
-  function closeDetail(){
-    document.getElementById('detailOverlay').classList.remove('show');
-    currentDetailId = null;
-  }
+  function closeDetail(){ document.getElementById('detailOverlay').classList.remove('show'); currentDetailId = null; }
 
   function showLightbox(src){
     document.getElementById('lightboxImg').src = src;
@@ -717,6 +810,9 @@
   /* ---------- Static wiring ---------- */
   document.getElementById('cancelBtn').onclick = closeEditor;
   document.getElementById('saveBtn').onclick = saveCurrentEntry;
+  document.getElementById('addHeadingBtn').onclick = function(){ addBlock('heading'); };
+  document.getElementById('addTextBtn').onclick = function(){ addBlock('text'); };
+  document.getElementById('addImageBtn').onclick = function(){ addBlock('image'); };
   document.getElementById('deleteBtn').onclick = function(){
     var id = document.getElementById('editId').value;
     if(id && confirm('Delete this entry and its folder? This can\'t be undone.')){
@@ -740,21 +836,6 @@
     var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     applyTheme(cur);
   };
-
-  var dropzone = document.getElementById('dropzone');
-  dropzone.onclick = function(){ document.getElementById('fileInput').click(); };
-  document.getElementById('fileInput').onchange = function(e){ addFiles(e.target.files); e.target.value=''; };
-  dropzone.ondragover = function(e){ e.preventDefault(); dropzone.classList.add('drag'); };
-  dropzone.ondragleave = function(){ dropzone.classList.remove('drag'); };
-  dropzone.ondrop = function(e){
-    e.preventDefault(); dropzone.classList.remove('drag');
-    if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
-  };
-  document.getElementById('editorOverlay').addEventListener('paste', function(e){
-    if(e.clipboardData && e.clipboardData.files && e.clipboardData.files.length){
-      addFiles(e.clipboardData.files);
-    }
-  });
 
   document.getElementById('lightbox').onclick = hideLightbox;
   document.addEventListener('keydown', function(e){
