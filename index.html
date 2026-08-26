@@ -143,6 +143,7 @@
   .img-block-drop.drag{border-color:var(--moss);background:var(--moss-soft);}
   .img-block-preview{position:relative;display:inline-block;margin-bottom:8px;}
   .img-block-preview img{max-width:220px;max-height:160px;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;display:block;}
+  .img-block-preview video{max-width:260px;max-height:180px;border:1px solid var(--line);border-radius:2px;display:block;}
   .img-block-preview .rm{
     position:absolute;top:-7px;right:-7px;background:var(--rust);color:#fff;border:none;
     width:18px;height:18px;border-radius:50%;font-size:11px;line-height:1;cursor:pointer;padding:0;
@@ -158,6 +159,7 @@
   .detail-body mark{background:#F5E27A;color:#2B2620;padding:0 2px;border-radius:2px;}
   .detail-body figure{margin:0 0 16px;}
   .detail-body figure img{max-width:100%;max-height:340px;object-fit:contain;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
+  .detail-body figure video{max-width:100%;max-height:400px;border:1px solid var(--line);border-radius:2px;}
   .detail-body figcaption{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;}
   .detail-meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:14px;border-top:1px dashed var(--line);padding-top:10px;}
 
@@ -228,6 +230,7 @@
         <button type="button" class="ghost small" id="addHeadingBtn">+ Heading</button>
         <button type="button" class="ghost small" id="addTextBtn">+ Text</button>
         <button type="button" class="ghost small" id="addImageBtn">+ Image</button>
+        <button type="button" class="ghost small" id="addVideoBtn">+ Video</button>
       </div>
       <div id="blocksContainer"></div>
     </div>
@@ -320,6 +323,10 @@
     if(t.indexOf('jpeg')!==-1 || t.indexOf('jpg')!==-1) return 'jpg';
     if(t.indexOf('gif')!==-1) return 'gif';
     if(t.indexOf('webp')!==-1) return 'webp';
+    if(t.indexOf('mp4')!==-1) return 'mp4';
+    if(t.indexOf('webm')!==-1) return 'webm';
+    if(t.indexOf('quicktime')!==-1) return 'mov';
+    if(t.indexOf('ogg')!==-1) return 'ogv';
     return fallback || 'png';
   }
   var CATEGORY_COLORS = {
@@ -479,6 +486,7 @@
       card.className = 'entry';
       card.onclick = function(){ openDetail(e.id); };
       var imgCount = e.imageCount || 0;
+      var vidCount = e.videoCount || 0;
       card.innerHTML =
         '<div class="entry-top"><h3>'+(e.pinned?'📌 ':'')+escapeHtml(e.title||'Untitled')+'</h3>'+
         (e.category ? '<span class="cat">'+catDot(e.category)+escapeHtml(e.category)+'</span>' : '')+
@@ -488,6 +496,7 @@
         ((e.keywords&&e.keywords.length) ? '<div class="kwline" style="color:var(--ink-soft);margin-top:4px;">'+escapeHtml(e.keywords.join(' · '))+'</div>' : '')+
         '<div class="meta-row"><span>Updated '+fmtDate(e.updatedAt)+'</span>'+
         (imgCount ? '<span>🖼 '+imgCount+'</span>' : '')+
+        (vidCount ? '<span>🎬 '+vidCount+'</span>' : '')+
         '</div>';
       card.querySelector('.pin-btn').onclick = function(ev){ ev.stopPropagation(); togglePin(e.id); };
       list.appendChild(card);
@@ -531,7 +540,7 @@
     blocks.forEach(function(b, i){
       var card = document.createElement('div');
       card.className = 'block-card ' + b.type;
-      var labelText = b.type === 'heading' ? 'Heading' : (b.type === 'image' ? 'Image' : 'Text');
+      var labelText = b.type === 'heading' ? 'Heading' : (b.type === 'image' ? 'Image' : (b.type === 'video' ? 'Video' : 'Text'));
       var head = document.createElement('div');
       head.className = 'block-head';
       head.innerHTML = '<span class="block-label">'+labelText+'</span>';
@@ -613,6 +622,41 @@
         capInput.style.marginTop = '4px';
         capInput.oninput = function(){ b.caption = capInput.value; };
         card.appendChild(capInput);
+      } else if(b.type === 'video'){
+        if(b.previewUrl){
+          var pwv = document.createElement('div');
+          pwv.className = 'img-block-preview';
+          pwv.innerHTML = '<video src="'+b.previewUrl+'" controls></video><button type="button" class="rm">×</button>';
+          pwv.querySelector('.rm').onclick = function(){
+            URL.revokeObjectURL(b.previewUrl);
+            b.previewUrl = null; b.blob = null; b.filename = null;
+            renderBlocks();
+          };
+          card.appendChild(pwv);
+        } else {
+          var dzv = document.createElement('div');
+          dzv.className = 'img-block-drop';
+          dzv.tabIndex = 0;
+          dzv.textContent = 'Click to add or drag a short video file here (mp4, mov, webm)';
+          var fiv = document.createElement('input');
+          fiv.type='file'; fiv.accept='video/*'; fiv.className='visually-hidden';
+          fiv.onchange = function(){ if(fiv.files[0]) setBlockVideo(b, fiv.files[0]); };
+          dzv.onclick = function(){ fiv.click(); };
+          dzv.ondragover = function(e){ e.preventDefault(); dzv.classList.add('drag'); };
+          dzv.ondragleave = function(){ dzv.classList.remove('drag'); };
+          dzv.ondrop = function(e){
+            e.preventDefault(); dzv.classList.remove('drag');
+            if(e.dataTransfer.files[0]) setBlockVideo(b, e.dataTransfer.files[0]);
+          };
+          card.appendChild(dzv);
+          card.appendChild(fiv);
+        }
+        var capInputV = document.createElement('input');
+        capInputV.type='text'; capInputV.placeholder='Caption (optional)';
+        capInputV.value = b.caption;
+        capInputV.style.marginTop = '4px';
+        capInputV.oninput = function(){ b.caption = capInputV.value; };
+        card.appendChild(capInputV);
       }
       c.appendChild(card);
     });
@@ -657,6 +701,13 @@
     b.previewUrl = URL.createObjectURL(file);
     renderBlocks();
   }
+  function setBlockVideo(b, file){
+    if(!file.type || file.type.indexOf('video/')!==0) return;
+    b.blob = file;
+    b.filename = null;
+    b.previewUrl = URL.createObjectURL(file);
+    renderBlocks();
+  }
 
   /* ---------- Serialize / parse notes.txt body ---------- */
   function serializeBlocks(blockList){
@@ -666,6 +717,10 @@
       else if(b.type==='text'){ lines.push(b.text||''); }
       else if(b.type==='image'){
         lines.push('[IMAGE: ' + b.filename + ']');
+        if(b.caption){ lines.push('Caption: ' + b.caption); }
+      }
+      else if(b.type==='video'){
+        lines.push('[VIDEO: ' + b.filename + ']');
         if(b.caption){ lines.push('Caption: ' + b.caption); }
       }
       lines.push('');
@@ -689,9 +744,17 @@
         out.push({type:'image', filename: fname, caption: caption});
         continue;
       }
+      if(line.indexOf('[VIDEO: ') === 0 && line.trim().slice(-1) === ']'){
+        var vname = line.trim().slice(8, -1);
+        i++;
+        var vcaption = '';
+        if(lines[i] && lines[i].indexOf('Caption: ') === 0){ vcaption = lines[i].slice(9); i++; }
+        out.push({type:'video', filename: vname, caption: vcaption});
+        continue;
+      }
       if(line.trim() === ''){ i++; continue; }
       var textLines = [];
-      while(i < lines.length && lines[i].trim() !== '' && lines[i].indexOf('## ') !== 0 && lines[i].indexOf('[IMAGE: ') !== 0){
+      while(i < lines.length && lines[i].trim() !== '' && lines[i].indexOf('## ') !== 0 && lines[i].indexOf('[IMAGE: ') !== 0 && lines[i].indexOf('[VIDEO: ') !== 0){
         textLines.push(lines[i]); i++;
       }
       out.push({type:'text', text: textLines.join('\n')});
@@ -737,7 +800,7 @@
         var parsed = parseBlocksFromBody(parseBody(notesText));
         for(var i=0;i<parsed.length;i++){
           var pb = parsed[i];
-          if(pb.type === 'image'){
+          if(pb.type === 'image' || pb.type === 'video'){
             if(!isDuplicate){ editingOldFiles.push(pb.filename); }
             var previewUrl = null, blob = null;
             try{
@@ -746,7 +809,7 @@
               blob = ifile;
               previewUrl = URL.createObjectURL(ifile);
             }catch(e){}
-            blocks.push({id:uid(), type:'image', text:'', caption: pb.caption||'', blob: blob, filename: isDuplicate ? null : pb.filename, previewUrl: previewUrl});
+            blocks.push({id:uid(), type:pb.type, text:'', caption: pb.caption||'', blob: blob, filename: isDuplicate ? null : pb.filename, previewUrl: previewUrl});
           } else {
             blocks.push({id:uid(), type:pb.type, text: pb.text||'', caption:'', blob:null, filename:null, previewUrl:null});
           }
@@ -781,7 +844,9 @@
       }
 
       var imageBlockIdx = 0;
+      var videoBlockIdx = 0;
       var imageCount = 0;
+      var videoCount = 0;
       for(var j=0;j<blocks.length;j++){
         if(blocks[j].type === 'image' && blocks[j].blob){
           imageBlockIdx++;
@@ -792,11 +857,20 @@
           await w.close();
           blocks[j].filename = fname;
           imageCount++;
+        } else if(blocks[j].type === 'video' && blocks[j].blob){
+          videoBlockIdx++;
+          var vfname = 'clip-' + videoBlockIdx + '.' + extFor(blocks[j].blob, 'mp4');
+          var vfh = await folderHandle.getFileHandle(vfname, {create:true});
+          var vw = await vfh.createWritable();
+          await vw.write(blocks[j].blob);
+          await vw.close();
+          blocks[j].filename = vfname;
+          videoCount++;
         }
       }
 
       var validBlocks = blocks.filter(function(b){
-        if(b.type==='image') return !!b.filename;
+        if(b.type==='image' || b.type==='video') return !!b.filename;
         return true;
       });
       var bodyText = serializeBlocks(validBlocks);
@@ -815,7 +889,7 @@
       var existing = isNew ? null : entries.find(function(x){return x.id===id;});
       var meta = {
         id: entryId, title: title, category: category, keywords: keywords,
-        folder: folderName, snippet: snippet, searchText: searchText, imageCount: imageCount,
+        folder: folderName, snippet: snippet, searchText: searchText, imageCount: imageCount, videoCount: videoCount,
         pinned: existing ? !!existing.pinned : false,
         createdAt: createdAt, updatedAt: now
       };
@@ -882,6 +956,15 @@
             html += '<figure><img src="'+url+'" data-src="'+url+'">' +
               (b.caption ? '<figcaption>'+escapeHtml(b.caption)+'</figcaption>' : '') + '</figure>';
           }catch(e){}
+        } else if(b.type==='video'){
+          try{
+            var vfh2 = await folderHandle.getFileHandle(b.filename, {create:false});
+            var vfile2 = await vfh2.getFile();
+            var vurl = URL.createObjectURL(vfile2);
+            currentDetailObjectUrls.push(vurl);
+            html += '<figure><video src="'+vurl+'" controls></video>' +
+              (b.caption ? '<figcaption>'+escapeHtml(b.caption)+'</figcaption>' : '') + '</figure>';
+          }catch(e){}
         }
       }
       if(!html) html = '<p style="color:var(--ink-soft);">No content in this entry yet.</p>';
@@ -915,6 +998,7 @@
   document.getElementById('addHeadingBtn').onclick = function(){ addBlock('heading'); };
   document.getElementById('addTextBtn').onclick = function(){ addBlock('text'); };
   document.getElementById('addImageBtn').onclick = function(){ addBlock('image'); };
+  document.getElementById('addVideoBtn').onclick = function(){ addBlock('video'); };
   document.getElementById('deleteBtn').onclick = function(){
     var id = document.getElementById('editId').value;
     if(id && confirm('Delete this entry and its folder? This can\'t be undone.')){
