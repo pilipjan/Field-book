@@ -88,8 +88,12 @@
   }
   .entry:hover{border-left-color:var(--rust);}
   .entry-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
-  .entry h3{font-family:var(--serif);font-size:18px;margin:0 0 4px;}
-  .entry .cat{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--moss);white-space:nowrap;}
+  .entry h3{font-family:var(--serif);font-size:18px;margin:0 0 4px;flex:1;}
+  .entry .cat{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--moss);white-space:nowrap;display:flex;align-items:center;gap:5px;}
+  .cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;}
+  .pin-btn{background:transparent;border:none;padding:2px 4px;font-size:15px;line-height:1;color:var(--ink-soft);cursor:pointer;}
+  .pin-btn.pinned{color:var(--rust);}
+  .pin-btn:hover{background:transparent;}
   .entry .snippet{
     color:var(--ink-soft);font-size:13.5px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
@@ -249,6 +253,8 @@
       <button class="ghost" id="closeDetailBtn">Close</button>
       <div class="right">
         <button class="danger" id="dDeleteBtn">Delete</button>
+        <button class="ghost" id="dDuplicateBtn">Duplicate</button>
+        <button class="ghost" id="dPinBtn">☆ Pin</button>
         <button class="primary" id="dEditBtn">Edit</button>
       </div>
     </div>
@@ -315,6 +321,27 @@
     if(t.indexOf('gif')!==-1) return 'gif';
     if(t.indexOf('webp')!==-1) return 'webp';
     return fallback || 'png';
+  }
+  var CATEGORY_COLORS = {
+    'General Liability': '#4F6B49',
+    'Professional': '#3B6E8F',
+    'Workers Compensation': '#A8492E',
+    'Auto': '#8B6F3E',
+    'Property': '#6B4F8A',
+    'Accident': '#B5546B',
+    'Umbrella': '#3E8B7A',
+    'Package': '#8A7F4F',
+    'General / Other': '#5C554A'
+  };
+  var FALLBACK_PALETTE = ['#4F6B49','#3B6E8F','#A8492E','#8B6F3E','#6B4F8A','#B5546B','#3E8B7A','#8A7F4F'];
+  function colorForCategory(cat){
+    if(CATEGORY_COLORS[cat]) return CATEGORY_COLORS[cat];
+    var h = 0;
+    for(var i=0;i<(cat||'').length;i++){ h = (h*31 + cat.charCodeAt(i)) & 0xffffffff; }
+    return FALLBACK_PALETTE[Math.abs(h) % FALLBACK_PALETTE.length];
+  }
+  function catDot(cat){
+    return '<span class="cat-dot" style="background:'+colorForCategory(cat)+';"></span>';
   }
 
   /* ---------- Folder connection ---------- */
@@ -418,7 +445,8 @@
     cats.forEach(function(c){
       var chip = document.createElement('div');
       chip.className = 'chip' + (activeCategory===c ? ' active':'');
-      chip.textContent = c;
+      chip.innerHTML = catDot(c) + ' ' + escapeHtml(c);
+      chip.style.display = 'flex'; chip.style.alignItems = 'center'; chip.style.gap = '5px';
       chip.onclick = function(){ activeCategory = (activeCategory===c ? null : c); renderChips(); renderList(); };
       row.appendChild(chip);
     });
@@ -431,9 +459,13 @@
     var filtered = entries.filter(function(e){
       if(activeCategory && e.category !== activeCategory) return false;
       if(!q) return true;
-      var hay = (e.title+' '+(e.snippet||'')+' '+e.category+' '+(e.keywords||[]).join(' ')).toLowerCase();
+      var hay = (e.title+' '+(e.searchText||e.snippet||'')+' '+e.category+' '+(e.keywords||[]).join(' ')).toLowerCase();
       return hay.indexOf(q) !== -1;
-    }).sort(function(a,b){ return b.updatedAt - a.updatedAt; });
+    }).sort(function(a,b){
+      var pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+      if(pa !== pb) return pb - pa;
+      return b.updatedAt - a.updatedAt;
+    });
 
     if(filtered.length===0){
       list.innerHTML = '<div class="empty">' + (entries.length===0
@@ -448,16 +480,27 @@
       card.onclick = function(){ openDetail(e.id); };
       var imgCount = e.imageCount || 0;
       card.innerHTML =
-        '<div class="entry-top"><h3>'+escapeHtml(e.title||'Untitled')+'</h3>'+
-        (e.category ? '<span class="cat">'+escapeHtml(e.category)+'</span>' : '')+
+        '<div class="entry-top"><h3>'+(e.pinned?'📌 ':'')+escapeHtml(e.title||'Untitled')+'</h3>'+
+        (e.category ? '<span class="cat">'+catDot(e.category)+escapeHtml(e.category)+'</span>' : '')+
+        '<button type="button" class="pin-btn' + (e.pinned?' pinned':'') + '" title="' + (e.pinned?'Unpin':'Pin to top') + '">' + (e.pinned?'★':'☆') + '</button>'+
         '</div>'+
         '<p class="snippet">'+escapeHtml(e.snippet||'')+'</p>'+
         ((e.keywords&&e.keywords.length) ? '<div class="kwline" style="color:var(--ink-soft);margin-top:4px;">'+escapeHtml(e.keywords.join(' · '))+'</div>' : '')+
         '<div class="meta-row"><span>Updated '+fmtDate(e.updatedAt)+'</span>'+
         (imgCount ? '<span>🖼 '+imgCount+'</span>' : '')+
         '</div>';
+      card.querySelector('.pin-btn').onclick = function(ev){ ev.stopPropagation(); togglePin(e.id); };
       list.appendChild(card);
     });
+  }
+  async function togglePin(id){
+    var e = entries.find(function(x){return x.id===id;});
+    if(!e) return;
+    e.pinned = !e.pinned;
+    await writeIndex();
+    renderList();
+    var dPinBtn = document.getElementById('dPinBtn');
+    if(dPinBtn && currentDetailId===id){ dPinBtn.textContent = e.pinned ? '★ Unpin' : '☆ Pin'; }
   }
 
   /* ---------- Block editor ---------- */
@@ -656,8 +699,11 @@
     return out;
   }
   function flattenForSnippet(blockList){
+    return flattenAll(blockList).slice(0,220);
+  }
+  function flattenAll(blockList){
     return blockList.filter(function(b){ return b.type==='heading' || b.type==='text'; })
-      .map(function(b){ return b.text; }).join(' ').trim().slice(0,220);
+      .map(function(b){ return b.text; }).join(' ').trim();
   }
 
   /* ---------- Editor open/save ---------- */
@@ -666,16 +712,16 @@
     if(idx === -1) return notesText;
     return notesText.slice(idx + 5);
   }
-  async function openEditor(entry){
+  async function openEditor(entry, isDuplicate){
     blocks.forEach(function(b){ if(b.previewUrl) URL.revokeObjectURL(b.previewUrl); });
     blocks = [];
     editingOldFiles = [];
-    document.getElementById('editId').value = entry ? entry.id : '';
-    document.getElementById('editorTitle').textContent = entry ? 'Edit Entry' : 'New Entry';
-    document.getElementById('fTitle').value = entry ? entry.title : '';
+    document.getElementById('editId').value = (entry && !isDuplicate) ? entry.id : '';
+    document.getElementById('editorTitle').textContent = isDuplicate ? 'New Entry (from duplicate)' : (entry ? 'Edit Entry' : 'New Entry');
+    document.getElementById('fTitle').value = entry ? (isDuplicate ? entry.title + ' (Copy)' : entry.title) : '';
     document.getElementById('fCategory').value = entry ? entry.category : 'General Liability';
     document.getElementById('fKeywords').value = entry ? (entry.keywords||[]).join(', ') : '';
-    document.getElementById('deleteBtn').style.display = entry ? 'inline-block' : 'none';
+    document.getElementById('deleteBtn').style.display = (entry && !isDuplicate) ? 'inline-block' : 'none';
     document.getElementById('editorOverlay').classList.add('show');
     renderBlocks();
 
@@ -692,7 +738,7 @@
         for(var i=0;i<parsed.length;i++){
           var pb = parsed[i];
           if(pb.type === 'image'){
-            editingOldFiles.push(pb.filename);
+            if(!isDuplicate){ editingOldFiles.push(pb.filename); }
             var previewUrl = null, blob = null;
             try{
               var ifh = await folderHandle.getFileHandle(pb.filename, {create:false});
@@ -700,7 +746,7 @@
               blob = ifile;
               previewUrl = URL.createObjectURL(ifile);
             }catch(e){}
-            blocks.push({id:uid(), type:'image', text:'', caption: pb.caption||'', blob: blob, filename: pb.filename, previewUrl: previewUrl});
+            blocks.push({id:uid(), type:'image', text:'', caption: pb.caption||'', blob: blob, filename: isDuplicate ? null : pb.filename, previewUrl: previewUrl});
           } else {
             blocks.push({id:uid(), type:pb.type, text: pb.text||'', caption:'', blob:null, filename:null, previewUrl:null});
           }
@@ -765,9 +811,12 @@
       await notesW.close();
 
       var snippet = flattenForSnippet(validBlocks);
+      var searchText = flattenAll(validBlocks);
+      var existing = isNew ? null : entries.find(function(x){return x.id===id;});
       var meta = {
         id: entryId, title: title, category: category, keywords: keywords,
-        folder: folderName, snippet: snippet, imageCount: imageCount,
+        folder: folderName, snippet: snippet, searchText: searchText, imageCount: imageCount,
+        pinned: existing ? !!existing.pinned : false,
         createdAt: createdAt, updatedAt: now
       };
       if(isNew){ entries.push(meta); }
@@ -803,10 +852,11 @@
     currentDetailObjectUrls = [];
 
     document.getElementById('dTitle').textContent = e.title;
-    document.getElementById('dCategory').textContent = e.category || '';
+    document.getElementById('dCategory').innerHTML = e.category ? (catDot(e.category) + escapeHtml(e.category)) : '';
     document.getElementById('dKeywords').textContent = (e.keywords&&e.keywords.length) ? e.keywords.join(' · ') : '';
     document.getElementById('dBody').innerHTML = '<p>Loading…</p>';
     document.getElementById('dMeta').textContent = 'Created ' + fmtDate(e.createdAt) + '  ·  Updated ' + fmtDate(e.updatedAt);
+    document.getElementById('dPinBtn').textContent = e.pinned ? '★ Unpin' : '☆ Pin';
     document.getElementById('detailOverlay').classList.add('show');
 
     try{
@@ -877,6 +927,14 @@
     var e = entries.find(function(x){return x.id===currentDetailId;});
     closeDetail();
     openEditor(e);
+  };
+  document.getElementById('dDuplicateBtn').onclick = function(){
+    var e = entries.find(function(x){return x.id===currentDetailId;});
+    closeDetail();
+    openEditor(e, true);
+  };
+  document.getElementById('dPinBtn').onclick = function(){
+    if(currentDetailId){ togglePin(currentDetailId); }
   };
   document.getElementById('dDeleteBtn').onclick = function(){
     if(currentDetailId && confirm('Delete this entry and its folder? This can\'t be undone.')){
