@@ -124,6 +124,11 @@
     font-family:var(--sans);font-size:13.5px;background:var(--card);color:var(--ink);resize:vertical;
   }
   .block-card textarea{min-height:64px;line-height:1.5;}
+  .fmt-toolbar{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;}
+  .fmt-toolbar button{padding:3px 9px;font-size:12px;line-height:1;min-width:26px;}
+  .fmt-toolbar button[data-fmt="bold"]{font-weight:700;}
+  .fmt-toolbar button[data-fmt="italic"]{font-style:italic;}
+  .fmt-toolbar button.dot{color:#fff;border-color:transparent;width:20px;height:20px;min-width:20px;border-radius:50%;padding:0;}
   .block-card.heading input{font-family:var(--serif);font-size:17px;font-weight:700;}
   .block-empty-hint{color:var(--ink-soft);font-size:13px;text-align:center;padding:14px;border:1px dashed var(--line);border-radius:var(--radius);}
 
@@ -146,6 +151,7 @@
   .detail-body h3{font-family:var(--serif);margin:18px 0 6px;font-size:17px;}
   .detail-body h3:first-child{margin-top:10px;}
   .detail-body p{margin:0 0 12px;line-height:1.6;font-size:14.5px;white-space:pre-wrap;}
+  .detail-body mark{background:#F5E27A;color:#2B2620;padding:0 2px;border-radius:2px;}
   .detail-body figure{margin:0 0 16px;}
   .detail-body figure img{max-width:100%;max-height:340px;object-fit:contain;border:1px solid var(--line);border-radius:2px;cursor:zoom-in;}
   .detail-body figcaption{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px;}
@@ -505,10 +511,23 @@
         hInput.oninput = function(){ b.text = hInput.value; };
         card.appendChild(hInput);
       } else if(b.type === 'text'){
+        var fmtBar = document.createElement('div');
+        fmtBar.className = 'fmt-toolbar';
+        fmtBar.innerHTML =
+          '<button type="button" data-fmt="bold" title="Bold">B</button>'+
+          '<button type="button" data-fmt="italic" title="Italic">I</button>'+
+          '<button type="button" data-fmt="highlight" title="Highlight">🖍</button>'+
+          '<button type="button" class="dot" data-fmt="red" title="Red text" style="background:#A8492E;"></button>'+
+          '<button type="button" class="dot" data-fmt="green" title="Green text" style="background:#4F6B49;"></button>'+
+          '<button type="button" class="dot" data-fmt="blue" title="Blue text" style="background:#3B6E8F;"></button>';
+        card.appendChild(fmtBar);
         var ta = document.createElement('textarea');
-        ta.placeholder = 'Describe this step…';
+        ta.placeholder = 'Describe this step… select text and use the buttons above to format it';
         ta.value = b.text;
         ta.oninput = function(){ b.text = ta.value; };
+        Array.prototype.forEach.call(fmtBar.querySelectorAll('button'), function(btn){
+          btn.onclick = function(){ applyFormat(ta, b, btn.getAttribute('data-fmt')); };
+        });
         card.appendChild(ta);
       } else if(b.type === 'image'){
         if(b.previewUrl){
@@ -554,6 +573,39 @@
       }
       c.appendChild(card);
     });
+  }
+  var FMT_TAGS = {
+    bold: ['**','**'],
+    italic: ['*','*'],
+    highlight: ['==','=='],
+    red: ['{{red:','}}'],
+    green: ['{{green:','}}'],
+    blue: ['{{blue:','}}']
+  };
+  function applyFormat(textarea, blockObj, fmt){
+    var tag = FMT_TAGS[fmt];
+    if(!tag) return;
+    var prefix = tag[0], suffix = tag[1];
+    var start = textarea.selectionStart, end = textarea.selectionEnd;
+    var value = textarea.value;
+    var selected = value.slice(start, end);
+    var placeholder = selected || 'text';
+    var newValue = value.slice(0,start) + prefix + placeholder + suffix + value.slice(end);
+    textarea.value = newValue;
+    blockObj.text = newValue;
+    textarea.focus();
+    var selStart = start + prefix.length;
+    textarea.setSelectionRange(selStart, selStart + placeholder.length);
+  }
+  function renderInlineFormatting(text){
+    var out = escapeHtml(text);
+    out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    out = out.replace(/==(.+?)==/g, '<mark>$1</mark>');
+    out = out.replace(/\{\{red:(.+?)\}\}/g, '<span style="color:#A8492E;font-weight:600;">$1</span>');
+    out = out.replace(/\{\{green:(.+?)\}\}/g, '<span style="color:#4F6B49;font-weight:600;">$1</span>');
+    out = out.replace(/\{\{blue:(.+?)\}\}/g, '<span style="color:#3B6E8F;font-weight:600;">$1</span>');
+    return out;
   }
   function setBlockImage(b, file){
     if(!file.type || file.type.indexOf('image/')!==0) return;
@@ -770,7 +822,7 @@
         if(b.type==='heading'){
           html += '<h3>'+escapeHtml(b.text)+'</h3>';
         } else if(b.type==='text'){
-          html += '<p>'+escapeHtml(b.text)+'</p>';
+          html += '<p>'+renderInlineFormatting(b.text)+'</p>';
         } else if(b.type==='image'){
           try{
             var ifh = await folderHandle.getFileHandle(b.filename, {create:false});
