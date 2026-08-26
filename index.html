@@ -901,7 +901,8 @@
       renderChips();
       renderList();
     }catch(e){
-      alert('Could not save to the folder. Make sure it still exists and try again.');
+      console.error('Field Book save error:', e);
+      alert('Could not save: ' + (e && e.message ? e.message : e) + '\n\nIf this keeps happening, check that the entry\'s folder still exists inside your chosen Field Book folder and hasn\'t been renamed or moved.');
     }finally{
       saveBtn.disabled = false; saveBtn.textContent = 'Save';
     }
