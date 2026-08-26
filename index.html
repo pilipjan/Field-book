@@ -833,6 +833,13 @@
     var saveBtn = document.getElementById('saveBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
 
+    var permOk = await ensurePermission(dirHandle, true);
+    if(!permOk){
+      alert('Field Book lost write access to your folder. Please use "Change folder" and reselect it, then try saving again.');
+      saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      return;
+    }
+
     try{
       var isNew = !id;
       var entryId = id || uid();
