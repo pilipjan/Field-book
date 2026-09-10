@@ -66,7 +66,6 @@
   button.small{padding:5px 10px;font-size:12px;}
   button:disabled{opacity:0.5;cursor:not-allowed;}
 
-  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
   .search-box{flex:1;min-width:200px;position:relative;}
   .search-box input{
     width:100%;padding:10px 12px 10px 34px;border:1px solid var(--line);
@@ -81,19 +80,34 @@
   }
   .chip.active{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
 
-  #list{column-count:1;column-gap:12px;}
-  @media (min-width:620px){ #list{column-count:2;} }
-  @media (min-width:960px){ #list{column-count:3;} }
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .view-toggle{display:flex;gap:4px;flex:none;}
+  .view-btn{padding:8px 11px;font-size:14px;line-height:1;}
+  .view-btn.active{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
+
+  #list.view-grid{column-count:1;column-gap:12px;}
+  @media (min-width:620px){ #list.view-grid{column-count:2;} }
+  @media (min-width:960px){ #list.view-grid{column-count:3;} }
+  #list.view-list{display:flex;flex-direction:column;gap:10px;}
+
   .entry{
-    display:inline-block;width:100%;break-inside:avoid;margin-bottom:12px;vertical-align:top;
-    border:1px solid rgba(43,38,32,0.08);border-radius:14px;box-shadow:var(--shadow);padding:16px 17px;cursor:pointer;position:relative;
+    border-radius:14px;box-shadow:var(--shadow);padding:16px 17px;cursor:pointer;position:relative;
     transition:box-shadow 0.15s ease, transform 0.15s ease;
   }
-  [data-theme="dark"] .entry{border-color:rgba(255,255,255,0.06);}
+  .view-grid .entry{
+    display:inline-block;width:100%;break-inside:avoid;margin-bottom:12px;vertical-align:top;
+    border:1px solid rgba(43,38,32,0.08);
+  }
+  [data-theme="dark"] .view-grid .entry{border-color:rgba(255,255,255,0.06);}
+  .view-list .entry{
+    background:var(--card);border:1px solid var(--line);border-left:4px solid var(--moss);
+    border-radius:var(--radius);padding:14px 16px;
+  }
   .entry:hover{
     box-shadow:0 3px 8px rgba(43,38,32,0.14), 0 12px 26px rgba(43,38,32,0.14);
     transform:translateY(-2px);
   }
+  .view-list .entry:hover{border-left-color:var(--rust);}
   .entry-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
   .entry h3{font-family:var(--serif);font-size:17px;margin:0 0 4px;flex:1;}
   .entry .cat{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-soft);white-space:nowrap;display:flex;align-items:center;gap:5px;}
@@ -101,9 +115,13 @@
   .pin-btn{background:transparent;border:none;padding:2px 4px;font-size:15px;line-height:1;color:var(--ink-soft);cursor:pointer;}
   .pin-btn.pinned{color:var(--rust);}
   .pin-btn:hover{background:transparent;}
-  .entry .snippet{
+  .view-grid .entry .snippet{
     color:var(--ink-soft);font-size:13.5px;margin:6px 0 0;overflow:hidden;text-overflow:ellipsis;
     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+  }
+  .view-list .entry .snippet{
+    color:var(--ink-soft);font-size:13.5px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   }
   .entry .meta-row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
   .kwline{font-family:var(--mono);font-size:10.5px;}
@@ -276,6 +294,8 @@
 <script>
 (function(){
   var THEME_KEY = 'refbank_theme';
+  var VIEW_KEY = 'refbank_view';
+  var currentView = localStorage.getItem(VIEW_KEY) || 'grid';
   var entries = [];
   var dirHandle = null;
   var activeCategory = null;
@@ -414,11 +434,28 @@
     document.getElementById('footerNote').textContent =
       'Each entry lives in its own folder inside "' + dirHandle.name + '" — notes.txt plus any screenshots, right on your computer.';
     document.getElementById('mainArea').innerHTML =
-      '<div class="toolbar"><div class="search-box"><input type="text" id="searchInput" placeholder="Search titles, notes, categories, keywords…"></div></div>' +
+      '<div class="toolbar"><div class="search-box"><input type="text" id="searchInput" placeholder="Search titles, notes, categories, keywords…"></div>' +
+      '<div class="view-toggle"><button type="button" id="viewGridBtn" class="view-btn" title="Grid view">▦</button><button type="button" id="viewListBtn" class="view-btn" title="List view">☰</button></div>' +
+      '</div>' +
       '<div class="chips" id="chipRow"></div><div id="list"></div>';
     document.getElementById('searchInput').oninput = renderList;
+    document.getElementById('viewGridBtn').onclick = function(){ setView('grid'); };
+    document.getElementById('viewListBtn').onclick = function(){ setView('list'); };
+    updateViewToggleUI();
     renderChips();
     renderList();
+  }
+  function setView(v){
+    currentView = v;
+    localStorage.setItem(VIEW_KEY, v);
+    updateViewToggleUI();
+    renderList();
+  }
+  function updateViewToggleUI(){
+    var g = document.getElementById('viewGridBtn'), l = document.getElementById('viewListBtn');
+    if(!g || !l) return;
+    g.classList.toggle('active', currentView === 'grid');
+    l.classList.toggle('active', currentView === 'list');
   }
   function showConnectPrompt(){
     document.getElementById('footerNote').textContent = '';
@@ -479,6 +516,7 @@
     var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
     var list = document.getElementById('list');
     if(!list) return;
+    list.className = 'view-' + currentView;
     var filtered = entries.filter(function(e){
       if(activeCategory && e.category !== activeCategory) return false;
       if(!q) return true;
@@ -500,7 +538,9 @@
     filtered.forEach(function(e){
       var card = document.createElement('div');
       card.className = 'entry';
-      card.style.backgroundColor = e.category ? cardTint(e.category) : 'var(--card)';
+      if(currentView === 'grid'){
+        card.style.backgroundColor = e.category ? cardTint(e.category) : 'var(--card)';
+      }
       card.onclick = function(){ openDetail(e.id); };
       var imgCount = e.imageCount || 0;
       var vidCount = e.videoCount || 0;
