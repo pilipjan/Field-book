@@ -81,32 +81,34 @@
   }
   .chip.active{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
 
-  #list{display:flex;flex-direction:column;gap:10px;}
+  #list{column-count:1;column-gap:12px;}
+  @media (min-width:620px){ #list{column-count:2;} }
+  @media (min-width:960px){ #list{column-count:3;} }
   .entry{
-    background:var(--card);border:1px solid var(--line);border-left:4px solid var(--moss);
-    border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;cursor:pointer;position:relative;
-    transition:background 0.15s ease, box-shadow 0.15s ease, border-left-color 0.15s ease, transform 0.15s ease;
+    display:inline-block;width:100%;break-inside:avoid;margin-bottom:12px;vertical-align:top;
+    border:1px solid rgba(43,38,32,0.08);border-radius:14px;box-shadow:var(--shadow);padding:16px 17px;cursor:pointer;position:relative;
+    transition:box-shadow 0.15s ease, transform 0.15s ease;
   }
+  [data-theme="dark"] .entry{border-color:rgba(255,255,255,0.06);}
   .entry:hover{
-    background:var(--moss-soft);border-left-color:var(--rust);
-    box-shadow:0 2px 6px rgba(43,38,32,0.12), 0 10px 22px rgba(43,38,32,0.12);
-    transform:translateY(-1px);
+    box-shadow:0 3px 8px rgba(43,38,32,0.14), 0 12px 26px rgba(43,38,32,0.14);
+    transform:translateY(-2px);
   }
   .entry-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
-  .entry h3{font-family:var(--serif);font-size:18px;margin:0 0 4px;flex:1;}
-  .entry .cat{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--moss);white-space:nowrap;display:flex;align-items:center;gap:5px;}
+  .entry h3{font-family:var(--serif);font-size:17px;margin:0 0 4px;flex:1;}
+  .entry .cat{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-soft);white-space:nowrap;display:flex;align-items:center;gap:5px;}
   .cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;}
   .pin-btn{background:transparent;border:none;padding:2px 4px;font-size:15px;line-height:1;color:var(--ink-soft);cursor:pointer;}
   .pin-btn.pinned{color:var(--rust);}
   .pin-btn:hover{background:transparent;}
   .entry .snippet{
-    color:var(--ink-soft);font-size:13.5px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    color:var(--ink-soft);font-size:13.5px;margin:6px 0 0;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
   }
-  .entry .meta-row{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
+  .entry .meta-row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
   .kwline{font-family:var(--mono);font-size:10.5px;}
 
-  .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);font-family:var(--serif);font-size:16px;}
+  .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);font-family:var(--serif);font-size:16px;column-span:all;}
 
   .overlay{
     display:none;position:fixed;inset:0;background:rgba(20,18,14,0.5);
@@ -355,6 +357,15 @@
   function catDot(cat){
     return '<span class="cat-dot" style="background:'+colorForCategory(cat)+';"></span>';
   }
+  function hexToRgba(hex, alpha){
+    var h = hex.replace('#','');
+    var r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+  function cardTint(cat){
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return hexToRgba(colorForCategory(cat), isDark ? 0.24 : 0.17);
+  }
 
   /* ---------- Folder connection ---------- */
   async function ensurePermission(handle, requestIfNeeded){
@@ -489,6 +500,7 @@
     filtered.forEach(function(e){
       var card = document.createElement('div');
       card.className = 'entry';
+      card.style.backgroundColor = e.category ? cardTint(e.category) : 'var(--card)';
       card.onclick = function(){ openDetail(e.id); };
       var imgCount = e.imageCount || 0;
       var vidCount = e.videoCount || 0;
@@ -1042,6 +1054,7 @@
   document.getElementById('themeBtn').onclick = function(){
     var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     applyTheme(cur);
+    if(document.getElementById('list')) renderList();
   };
 
   document.getElementById('lightbox').onclick = hideLightbox;
