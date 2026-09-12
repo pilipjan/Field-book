@@ -85,9 +85,8 @@
   .view-btn{padding:8px 11px;font-size:14px;line-height:1;}
   .view-btn.active{background:var(--moss);color:#fbf9f3;border-color:var(--moss);}
 
-  #list.view-grid{column-count:1;column-gap:12px;}
-  @media (min-width:620px){ #list.view-grid{column-count:2;} }
-  @media (min-width:960px){ #list.view-grid{column-count:3;} }
+  #list.view-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media (min-width:620px){ #list.view-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));} }
   #list.view-list{display:flex;flex-direction:column;gap:10px;}
 
   .entry{
@@ -95,7 +94,6 @@
     transition:box-shadow 0.15s ease, transform 0.15s ease;
   }
   .view-grid .entry{
-    display:inline-block;width:100%;break-inside:avoid;margin-bottom:12px;vertical-align:top;
     border:1px solid rgba(43,38,32,0.08);
   }
   [data-theme="dark"] .view-grid .entry{border-color:rgba(255,255,255,0.06);}
@@ -126,7 +124,19 @@
   .entry .meta-row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);}
   .kwline{font-family:var(--mono);font-size:10.5px;}
 
-  .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);font-family:var(--serif);font-size:16px;column-span:all;}
+  .empty{text-align:center;padding:60px 20px;color:var(--ink-soft);font-family:var(--serif);font-size:16px;column-span:all;grid-column:1/-1;}
+
+  .toast-stack{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column-reverse;gap:8px;z-index:200;align-items:center;
+  }
+  .toast{
+    background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:13px;
+    padding:10px 16px;border-radius:20px;box-shadow:var(--shadow);max-width:90vw;
+    animation:toast-in 0.18s ease-out;
+  }
+  .toast.error{background:var(--rust);}
+  @keyframes toast-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 
   .overlay{
     display:none;position:fixed;inset:0;background:rgba(20,18,14,0.5);
@@ -291,6 +301,19 @@
 
 <div class="lightbox" id="lightbox"><img id="lightboxImg" src="" alt="Full size screenshot"></div>
 
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p id="confirmMessage" style="color:var(--ink-soft);font-size:14px;line-height:1.5;"></p>
+    <div class="modal-actions">
+      <button class="ghost" id="confirmCancelBtn">Cancel</button>
+      <div class="right"><button class="danger" id="confirmOkBtn">Confirm</button></div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   var THEME_KEY = 'refbank_theme';
@@ -303,6 +326,7 @@
   var editingOldFiles = [];    // image filenames on disk before this edit, for cleanup
   var currentDetailId = null;
   var currentDetailObjectUrls = [];
+  var editorDirty = false;
 
   /* ---------- IndexedDB handle storage ---------- */
   function idbOpen(){
@@ -401,7 +425,11 @@
       await idbSet('root', handle);
       dirHandle = handle;
       await afterConnect();
-    }catch(e){}
+    }catch(e){
+      if(e && e.name !== 'AbortError'){
+        showToast('Could not open that folder: ' + (e.message || e), 'error');
+      }
+    }
   }
   async function readIndex(){
     var fh = await dirHandle.getFileHandle('index.json', {create:true});
@@ -410,25 +438,100 @@
     if(!text || !text.trim()){ entries = []; return; }
     try{ entries = JSON.parse(text); }catch(e){ entries = []; }
   }
+  var syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('fieldbook') : null;
+  var suppressBroadcast = false;
+  if(syncChannel){
+    syncChannel.onmessage = async function(msg){
+      if(!dirHandle || !msg.data || msg.data.type !== 'index-changed') return;
+      suppressBroadcast = true;
+      try{ await readIndex(); renderChips(); renderList(); }finally{ suppressBroadcast = false; }
+    };
+  }
   async function writeIndex(){
     var fh = await dirHandle.getFileHandle('index.json', {create:true});
     var w = await fh.createWritable();
     await w.write(JSON.stringify(entries, null, 2));
     await w.close();
+    if(syncChannel && !suppressBroadcast){ syncChannel.postMessage({type:'index-changed'}); }
   }
   async function afterConnect(){
     await readIndex();
     renderHeaderConnected();
     renderMainConnected();
+    if(entries.length === 0){
+      var hasFolders = false;
+      try{
+        for await (var pair of dirHandle.entries()){
+          if(pair[1].kind === 'directory'){ hasFolders = true; break; }
+        }
+      }catch(e){}
+      if(hasFolders){
+        var doRebuild = await showConfirm(
+          'This folder has existing entry folders but no index yet — maybe it was cleared, or this folder was used on another computer. Rebuild the list from the folders themselves?',
+          {title:'Rebuild index?', okLabel:'Rebuild'}
+        );
+        if(doRebuild){ await rebuildIndexFromFolders(); }
+      }
+    }
+  }
+  async function rebuildIndexFromFolders(){
+    var rebuilt = [];
+    try{
+      for await (var pair of dirHandle.entries()){
+        var name = pair[0], handle = pair[1];
+        if(handle.kind !== 'directory') continue;
+        try{
+          var notesText = '';
+          try{
+            var nfh = await handle.getFileHandle('notes.txt', {create:false});
+            var nfile = await nfh.getFile();
+            notesText = await nfile.text();
+          }catch(e){ continue; }
+          var titleMatch = /^Title: (.*)$/m.exec(notesText);
+          var catMatch = /^Category: (.*)$/m.exec(notesText);
+          var kwMatch = /^Keywords: (.*)$/m.exec(notesText);
+          var createdMatch = /^Created: (.*)$/m.exec(notesText);
+          var updatedMatch = /^Updated: (.*)$/m.exec(notesText);
+          var title = titleMatch ? titleMatch[1].trim() : name;
+          var category = catMatch ? catMatch[1].trim() : 'General / Other';
+          var keywords = kwMatch ? kwMatch[1].split(',').map(function(k){return k.trim();}).filter(function(k){return k.length;}) : [];
+          var createdAt = createdMatch ? Date.parse(createdMatch[1].trim()) : NaN;
+          var updatedAt = updatedMatch ? Date.parse(updatedMatch[1].trim()) : NaN;
+          var validBlocks = parseBlocksFromBody(parseBody(notesText));
+          var imageCount = 0, videoCount = 0;
+          validBlocks.forEach(function(b){ if(b.type==='image') imageCount++; if(b.type==='video') videoCount++; });
+          rebuilt.push({
+            id: uid(), title: title, category: category, keywords: keywords,
+            folder: name, snippet: flattenForSnippet(validBlocks), searchText: flattenAll(validBlocks),
+            imageCount: imageCount, videoCount: videoCount, pinned: false,
+            createdAt: isNaN(createdAt) ? Date.now() : createdAt,
+            updatedAt: isNaN(updatedAt) ? Date.now() : updatedAt
+          });
+        }catch(e){}
+      }
+    }catch(e){
+      showToast('Could not scan the folder: ' + (e.message || e), 'error');
+      return;
+    }
+    entries = rebuilt;
+    await writeIndex();
+    renderChips();
+    renderList();
+    showToast('Rebuilt index from ' + rebuilt.length + ' folder' + (rebuilt.length===1?'':'s') + '.');
   }
   function renderHeaderConnected(){
     var actions = document.getElementById('hdrActions');
     actions.innerHTML =
       '<span class="folder-badge">📁 ' + escapeHtml(dirHandle.name) + '</span>' +
+      '<button class="ghost" id="rebuildBtn" title="Rebuild index from the folders on disk">⟲ Rebuild</button>' +
       '<button class="ghost" id="changeFolderBtn">Change folder</button>' +
       '<button class="primary" id="newBtn">+ New Entry</button>';
     document.getElementById('changeFolderBtn').onclick = pickFolder;
     document.getElementById('newBtn').onclick = function(){ openEditor(null); };
+    document.getElementById('rebuildBtn').onclick = async function(){
+      var ok = await showConfirm('Rebuild the index from the folders on disk? This replaces the current list (pins will be cleared) using what\'s saved in each entry\'s notes.txt.', {title:'Rebuild index?', okLabel:'Rebuild'});
+      if(ok){ await rebuildIndexFromFolders(); }
+    };
   }
   function renderMainConnected(){
     document.getElementById('footerNote').textContent =
@@ -571,6 +674,7 @@
 
   /* ---------- Block editor ---------- */
   function addBlock(type){
+    markDirty();
     blocks.push({id:uid(), type:type, text:'', caption:'', blob:null, filename:null, previewUrl:null});
     renderBlocks();
   }
@@ -578,10 +682,12 @@
     var i = blocks.findIndex(function(b){return b.id===id;});
     var j = i + dir;
     if(i<0 || j<0 || j>=blocks.length) return;
+    markDirty();
     var tmp = blocks[i]; blocks[i]=blocks[j]; blocks[j]=tmp;
     renderBlocks();
   }
   function removeBlock(id){
+    markDirty();
     var b = blocks.find(function(x){return x.id===id;});
     if(b && b.previewUrl) URL.revokeObjectURL(b.previewUrl);
     blocks = blocks.filter(function(x){return x.id!==id;});
@@ -617,7 +723,7 @@
         var hInput = document.createElement('input');
         hInput.type='text'; hInput.placeholder='Step heading, e.g. "Step 1: Open network settings"';
         hInput.value = b.text;
-        hInput.oninput = function(){ b.text = hInput.value; };
+        hInput.oninput = function(){ b.text = hInput.value; markDirty(); };
         card.appendChild(hInput);
       } else if(b.type === 'text'){
         var fmtBar = document.createElement('div');
@@ -633,7 +739,7 @@
         var ta = document.createElement('textarea');
         ta.placeholder = 'Describe this step… select text and use the buttons above to format it';
         ta.value = b.text;
-        ta.oninput = function(){ b.text = ta.value; };
+        ta.oninput = function(){ b.text = ta.value; markDirty(); };
         Array.prototype.forEach.call(fmtBar.querySelectorAll('button'), function(btn){
           btn.onclick = function(){ applyFormat(ta, b, btn.getAttribute('data-fmt')); };
         });
@@ -677,7 +783,7 @@
         capInput.type='text'; capInput.placeholder='Caption (optional)';
         capInput.value = b.caption;
         capInput.style.marginTop = '4px';
-        capInput.oninput = function(){ b.caption = capInput.value; };
+        capInput.oninput = function(){ b.caption = capInput.value; markDirty(); };
         card.appendChild(capInput);
       } else if(b.type === 'video'){
         if(b.previewUrl){
@@ -712,7 +818,7 @@
         capInputV.type='text'; capInputV.placeholder='Caption (optional)';
         capInputV.value = b.caption;
         capInputV.style.marginTop = '4px';
-        capInputV.oninput = function(){ b.caption = capInputV.value; };
+        capInputV.oninput = function(){ b.caption = capInputV.value; markDirty(); };
         card.appendChild(capInputV);
       }
       c.appendChild(card);
@@ -729,6 +835,7 @@
   function applyFormat(textarea, blockObj, fmt){
     var tag = FMT_TAGS[fmt];
     if(!tag) return;
+    markDirty();
     var prefix = tag[0], suffix = tag[1];
     var start = textarea.selectionStart, end = textarea.selectionEnd;
     var value = textarea.value;
@@ -753,6 +860,7 @@
   }
   function setBlockImage(b, file){
     if(!file.type || file.type.indexOf('image/')!==0) return;
+    markDirty();
     b.blob = file;
     b.filename = null;
     b.previewUrl = URL.createObjectURL(file);
@@ -760,6 +868,7 @@
   }
   function setBlockVideo(b, file){
     if(!file.type || file.type.indexOf('video/')!==0) return;
+    markDirty();
     b.blob = file;
     b.filename = null;
     b.previewUrl = URL.createObjectURL(file);
@@ -874,9 +983,19 @@
         renderBlocks();
       }
     }
+    editorDirty = false;
     document.getElementById('fTitle').focus();
   }
-  function closeEditor(){ document.getElementById('editorOverlay').classList.remove('show'); }
+  function closeEditor(){ document.getElementById('editorOverlay').classList.remove('show'); editorDirty = false; }
+  function markDirty(){ editorDirty = true; }
+  async function requestCloseEditor(){
+    if(editorDirty){
+      var ok = await showConfirm('Discard your unsaved changes to this entry?', {title:'Discard changes?', okLabel:'Discard'});
+      if(!ok) return false;
+    }
+    closeEditor();
+    return true;
+  }
 
   async function saveCurrentEntry(){
     var id = document.getElementById('editId').value;
@@ -892,7 +1011,7 @@
 
     var permOk = await ensurePermission(dirHandle, true);
     if(!permOk){
-      alert('Field Book lost write access to your folder. Please use "Change folder" and reselect it, then try saving again.');
+      showToast('Field Book lost write access to your folder. Use "Change folder" to reselect it, then try saving again.', 'error');
       saveBtn.disabled = false; saveBtn.textContent = 'Save';
       return;
     }
@@ -903,14 +1022,11 @@
       var folderName = isNew ? (slugify(title) + '-' + entryId.slice(-6)) : entries.find(function(x){return x.id===id;}).folder;
       var folderHandle = await dirHandle.getDirectoryHandle(folderName, {create:true});
 
-      for(var k=0;k<editingOldFiles.length;k++){
-        try{ await folderHandle.removeEntry(editingOldFiles[k]); }catch(e){}
-      }
-
       var imageBlockIdx = 0;
       var videoBlockIdx = 0;
       var imageCount = 0;
       var videoCount = 0;
+      var newFiles = [];
       for(var j=0;j<blocks.length;j++){
         if(blocks[j].type === 'image' && blocks[j].blob){
           imageBlockIdx++;
@@ -920,6 +1036,7 @@
           await w.write(blocks[j].blob);
           await w.close();
           blocks[j].filename = fname;
+          newFiles.push(fname);
           imageCount++;
         } else if(blocks[j].type === 'video' && blocks[j].blob){
           videoBlockIdx++;
@@ -929,6 +1046,7 @@
           await vw.write(blocks[j].blob);
           await vw.close();
           blocks[j].filename = vfname;
+          newFiles.push(vfname);
           videoCount++;
         }
       }
@@ -961,12 +1079,21 @@
       else { var idxPos = entries.findIndex(function(x){return x.id===id;}); entries[idxPos] = meta; }
 
       await writeIndex();
+
+      var newFilesSet = {};
+      newFiles.forEach(function(f){ newFilesSet[f] = true; });
+      for(var k=0;k<editingOldFiles.length;k++){
+        if(!newFilesSet[editingOldFiles[k]]){
+          try{ await folderHandle.removeEntry(editingOldFiles[k]); }catch(e){}
+        }
+      }
+
       closeEditor();
       renderChips();
       renderList();
     }catch(e){
       console.error('Field Book save error:', e);
-      alert('Could not save: ' + (e && e.message ? e.message : e) + '\n\nIf this keeps happening, check that the entry\'s folder still exists inside your chosen Field Book folder and hasn\'t been renamed or moved.');
+      showToast('Could not save: ' + (e && e.message ? e.message : e) + ' — check that the entry\'s folder still exists and hasn\'t been renamed or moved.', 'error');
     }finally{
       saveBtn.disabled = false; saveBtn.textContent = 'Save';
     }
@@ -975,11 +1102,19 @@
   async function deleteEntryById(id){
     var e = entries.find(function(x){return x.id===id;});
     if(!e) return;
-    try{ await dirHandle.removeEntry(e.folder, {recursive:true}); }catch(err){}
+    try{
+      await dirHandle.removeEntry(e.folder, {recursive:true});
+    }catch(err){
+      if(err && err.name !== 'NotFoundError'){
+        showToast('Could not delete the folder "' + e.folder + '" — it was kept in your list so you don\'t lose track of it.', 'error');
+        return;
+      }
+    }
     entries = entries.filter(function(x){return x.id!==id;});
     await writeIndex();
     renderChips();
     renderList();
+    showToast('Entry deleted.');
   }
 
   /* ---------- Detail ---------- */
@@ -1020,7 +1155,9 @@
             currentDetailObjectUrls.push(url);
             html += '<figure><img src="'+url+'" data-src="'+url+'">' +
               (b.caption ? '<figcaption>'+escapeHtml(b.caption)+'</figcaption>' : '') + '</figure>';
-          }catch(e){}
+          }catch(e){
+            html += '<p style="color:var(--rust);font-family:var(--mono);font-size:12px;">⚠ missing file: ' + escapeHtml(b.filename||'unknown') + '</p>';
+          }
         } else if(b.type==='video'){
           try{
             var vfh2 = await folderHandle.getFileHandle(b.filename, {create:false});
@@ -1029,7 +1166,9 @@
             currentDetailObjectUrls.push(vurl);
             html += '<figure><video src="'+vurl+'" controls></video>' +
               (b.caption ? '<figcaption>'+escapeHtml(b.caption)+'</figcaption>' : '') + '</figure>';
-          }catch(e){}
+          }catch(e){
+            html += '<p style="color:var(--rust);font-family:var(--mono);font-size:12px;">⚠ missing file: ' + escapeHtml(b.filename||'unknown') + '</p>';
+          }
         }
       }
       if(!html) html = '<p style="color:var(--ink-soft);">No content in this entry yet.</p>';
@@ -1052,22 +1191,58 @@
     document.getElementById('lightboxImg').src='';
   }
 
+  function showToast(message, type){
+    var stack = document.getElementById('toastStack');
+    var t = document.createElement('div');
+    t.className = 'toast' + (type === 'error' ? ' error' : '');
+    t.textContent = message;
+    stack.appendChild(t);
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 4200);
+  }
+  function showConfirm(message, opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      document.getElementById('confirmTitle').textContent = opts.title || 'Are you sure?';
+      document.getElementById('confirmMessage').textContent = message;
+      var overlay = document.getElementById('confirmOverlay');
+      var okBtn = document.getElementById('confirmOkBtn');
+      var cancelBtn = document.getElementById('confirmCancelBtn');
+      okBtn.textContent = opts.okLabel || 'Confirm';
+      overlay.classList.add('show');
+      function cleanup(result){
+        overlay.classList.remove('show');
+        okBtn.onclick = null; cancelBtn.onclick = null;
+        overlay.onmousedown = null;
+        resolve(result);
+      }
+      okBtn.onclick = function(){ cleanup(true); };
+      cancelBtn.onclick = function(){ cleanup(false); };
+      overlay.onmousedown = function(e){ if(e.target === overlay) cleanup(false); };
+    });
+  }
+
   function applyTheme(t){
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem(THEME_KEY, t);
   }
 
   /* ---------- Static wiring ---------- */
-  document.getElementById('cancelBtn').onclick = closeEditor;
+  document.getElementById('cancelBtn').onclick = requestCloseEditor;
+  document.getElementById('fTitle').oninput = markDirty;
+  document.getElementById('fCategory').onchange = markDirty;
+  document.getElementById('fKeywords').oninput = markDirty;
   document.getElementById('saveBtn').onclick = saveCurrentEntry;
   document.getElementById('addHeadingBtn').onclick = function(){ addBlock('heading'); };
   document.getElementById('addTextBtn').onclick = function(){ addBlock('text'); };
   document.getElementById('addImageBtn').onclick = function(){ addBlock('image'); };
   document.getElementById('addVideoBtn').onclick = function(){ addBlock('video'); };
-  document.getElementById('deleteBtn').onclick = function(){
+  document.getElementById('deleteBtn').onclick = async function(){
     var id = document.getElementById('editId').value;
-    if(id && confirm('Delete this entry and its folder? This can\'t be undone.')){
-      deleteEntryById(id);
+    if(!id) return;
+    var target = entries.find(function(x){return x.id===id;});
+    var ok = await showConfirm('Delete "' + (target ? target.title : 'this entry') + '" and its folder? This can\'t be undone.', {title:'Delete entry?', okLabel:'Delete'});
+    if(ok){
+      await deleteEntryById(id);
       closeEditor();
     }
   };
@@ -1085,9 +1260,12 @@
   document.getElementById('dPinBtn').onclick = function(){
     if(currentDetailId){ togglePin(currentDetailId); }
   };
-  document.getElementById('dDeleteBtn').onclick = function(){
-    if(currentDetailId && confirm('Delete this entry and its folder? This can\'t be undone.')){
-      deleteEntryById(currentDetailId);
+  document.getElementById('dDeleteBtn').onclick = async function(){
+    if(!currentDetailId) return;
+    var target = entries.find(function(x){return x.id===currentDetailId;});
+    var ok = await showConfirm('Delete "' + (target ? target.title : 'this entry') + '" and its folder? This can\'t be undone.', {title:'Delete entry?', okLabel:'Delete'});
+    if(ok){
+      await deleteEntryById(currentDetailId);
       closeDetail();
     }
   };
@@ -1099,9 +1277,17 @@
 
   document.getElementById('lightbox').onclick = hideLightbox;
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){ hideLightbox(); closeDetail(); closeEditor(); }
+    if(e.key !== 'Escape') return;
+    var confirmEl = document.getElementById('confirmOverlay');
+    var lightboxEl = document.getElementById('lightbox');
+    var detailEl = document.getElementById('detailOverlay');
+    var editorEl = document.getElementById('editorOverlay');
+    if(confirmEl.classList.contains('show')){ document.getElementById('confirmCancelBtn').click(); return; }
+    if(lightboxEl.classList.contains('show')){ hideLightbox(); return; }
+    if(detailEl.classList.contains('show')){ closeDetail(); return; }
+    if(editorEl.classList.contains('show')){ requestCloseEditor(); return; }
   });
-  document.getElementById('editorOverlay').addEventListener('mousedown', function(e){ if(e.target===this) closeEditor(); });
+  document.getElementById('editorOverlay').addEventListener('mousedown', function(e){ if(e.target===this) requestCloseEditor(); });
   document.getElementById('detailOverlay').addEventListener('mousedown', function(e){ if(e.target===this) closeDetail(); });
 
   /* ---------- Init ---------- */
